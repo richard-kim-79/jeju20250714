@@ -1,0 +1,265 @@
+/* 커스텀 스타일 */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* 애니메이션 */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 링크 스타일 */
+.link-text {
+    color: #1d4ed8;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.link-text:hover {
+    color: #1e40af;
+}
+
+/* 이미지 업로드 스타일 */
+.image-upload-label {
+    transition: all 0.2s ease;
+}
+
+.image-upload-label:hover {
+    transform: scale(1.05);
+}
+
+/* 버튼 호버 효과 */
+.btn-hover {
+    transition: all 0.2s ease;
+}
+
+.btn-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 모달 애니메이션 */
+.modal-enter {
+    animation: modalEnter 0.3s ease-out;
+}
+
+@keyframes modalEnter {
+    from { 
+        opacity: 0; 
+        transform: scale(0.9) translateY(-20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
+}
+
+/* 카테고리 버튼 활성화 스타일 */
+.category-btn.active {
+    background-color: #fed7aa;
+    color: #ea580c;
+    border-color: #fdba74;
+}
+
+/* 게시글 카드 스타일 */
+.post-card {
+    transition: all 0.2s ease;
+}
+
+.post-card:hover {
+    background-color: #f9fafb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 로딩 스피너 */
+.loading-spinner {
+    border: 2px solid #f3f4f6;
+    border-top: 2px solid #ea580c;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .max-w-4xl {
+        max-width: 100%;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .category-btn {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .category-btn span:first-child {
+        font-size: 1rem;
+    }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+    .bg-white {
+        background-color: #1f2937;
+    }
+    
+    .text-gray-900 {
+        color: #f9fafb;
+    }
+    
+    .text-gray-500 {
+        color: #d1d5db;
+    }
+    
+    .border-gray-200 {
+        border-color: #374151;
+    }
+    
+    .bg-gray-50 {
+        background-color: #111827;
+    }
+} 
+
+#loginBtn {
+  background: linear-gradient(90deg, #ffb347 0%, #ea580c 100%) !important;
+  color: #fff !important;
+  border: 2px solid #ea580c !important;
+  box-shadow: 0 2px 12px rgba(234,88,12,0.15);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+#loginBtn:hover, #loginBtn:focus {
+  background: linear-gradient(90deg, #ea580c 0%, #ffb347 100%) !important;
+  color: #fff !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 4px 16px rgba(234,88,12,0.25);
+  outline: none;
+} 
+
+#submitPost {
+  background: linear-gradient(90deg, #ea580c 0%, #ffb347 100%) !important;
+  color: #fff !important;
+  border: 2px solid #ea580c !important;
+  box-shadow: 0 2px 12px rgba(234,88,12,0.15);
+  font-weight: bold;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+  padding: 0.7rem 2.2rem !important;
+  transition: all 0.2s;
+}
+#submitPost:hover, #submitPost:focus {
+  background: linear-gradient(90deg, #ffb347 0%, #ea580c 100%) !important;
+  color: #fff !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 4px 16px rgba(234,88,12,0.25);
+  outline: none;
+  transform: translateY(-2px) scale(1.04);
+}
+
+/* 주요 버튼(로그인 등)도 동일하게 강조 */
+#loginBtn, .main-action-btn {
+  background: linear-gradient(90deg, #ffb347 0%, #ea580c 100%) !important;
+  color: #fff !important;
+  border: 2px solid #ea580c !important;
+  box-shadow: 0 2px 12px rgba(234,88,12,0.15);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+#loginBtn:hover, #loginBtn:focus, .main-action-btn:hover, .main-action-btn:focus {
+  background: linear-gradient(90deg, #ea580c 0%, #ffb347 100%) !important;
+  color: #fff !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 4px 16px rgba(234,88,12,0.25);
+  outline: none;
+} 
+
+/* 반응형 광고 배너 */
+#adBanner .max-w-xl {
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  #adBanner .max-w-xl {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* 반응형 버튼/입력창 */
+@media (max-width: 600px) {
+  #loginBtn, #submitPost, .main-action-btn {
+    font-size: 1rem;
+    padding: 0.6rem 1.2rem !important;
+    min-width: 100px;
+  }
+  #postContent {
+    font-size: 1rem;
+    padding: 0.7rem 0.8rem;
+  }
+  .category-btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+  }
+}
+
+/* 입력창, 버튼 터치 영역 확대 */
+#postContent, #loginBtn, #submitPost, .main-action-btn {
+  touch-action: manipulation;
+  min-height: 44px;
+}
+
+/* 피드 반응형 */
+@media (max-width: 600px) {
+  .max-w-4xl {
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+  }
+  .post-card {
+    padding: 0.8rem 0.5rem !important;
+  }
+}
+
+/* 포커스 스타일(접근성) */
+#loginBtn:focus, #submitPost:focus, .main-action-btn:focus {
+  outline: 2px solid #ea580c !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px #ffedd5;
+}
+
+/* 입력창 placeholder 색상 */
+#postContent::placeholder {
+  color: #fdba74;
+  opacity: 1;
+}
+
+/* 카테고리 버튼 모바일 스크롤 */
+.category-btn {
+  scroll-snap-align: start;
+}
+
+/* 광고 배너 모바일 여백 */
+@media (max-width: 600px) {
+  #adBanner {
+    margin-bottom: 1rem;
+  }
+} 
