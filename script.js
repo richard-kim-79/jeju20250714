@@ -6,7 +6,7 @@ class JejuSNS {
         this.selectedCategory = 'all';
         this.searchQuery = '';
         this.apiKey = '';
-        this.apiUrl = 'http://localhost:3002/api'; // API 서버 주소
+        this.apiUrl = 'https://jeju20250714-8gv28euev-bluewhale2025.vercel.app/api'; // API 서버 주소
         this.isLoading = false;
         
         // 카테고리 정의
