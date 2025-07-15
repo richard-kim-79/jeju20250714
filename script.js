@@ -423,7 +423,7 @@ class JejuSNS {
             userSection.innerHTML = `
                 <button
                     id="loginBtn"
-                    class="bg-orange-600 text-white text-sm px-4 py-1.5 rounded-full hover:bg-orange-700 transition-colors"
+                    class="bg-orange-600 text-white text-sm px-4 py-2 rounded-full hover:bg-orange-700 transition-colors font-medium shadow-md hover:shadow-lg transform hover:scale-105"
                 >
                     로그인
                 </button>
