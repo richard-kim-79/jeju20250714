@@ -96,6 +96,9 @@ class JejuSNS {
         
         await this.fetchPosts();
         this.renderPosts();
+        
+        // UI 업데이트 (로그인 버튼 표시를 위해)
+        this.updateUserInterface();
     }
 
     setupEventListeners() {
