@@ -2,15 +2,16 @@
   "name": "jeju-sns-platform",
   "version": "1.0.0",
   "description": "JeJu 지역 정보 공유 SNS 플랫폼",
-  "main": "server-pg.js",
+  "main": "railway-server.js",
   "scripts": {
-    "start": "node server-pg.js",
-    "dev": "nodemon server-pg.js",
+    "start": "node railway-server.js",
+    "dev": "nodemon railway-server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "npm start",
     "heroku-postbuild": "echo 'Build completed'",
-    "railway": "node server-pg.js",
-    "build": "echo 'Build completed'"
+    "railway": "node railway-server.js",
+    "build": "echo 'Build completed'",
+    "railway-start": "node railway-server.js"
   },
   "keywords": [
     "jeju",
