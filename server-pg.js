@@ -16,8 +16,10 @@ const PORT = process.env.PORT || 3001;
 app.use(cors({
     origin: ['http://localhost:3000', 'https://jeju20250714-btyv976q8-bluewhale2025.vercel.app'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'user-id'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+    allowedHeaders: ['Content-Type', 'Authorization', 'user-id', 'X-Requested-With'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
@@ -41,6 +43,9 @@ const authenticateUser = async (req, res, next) => {
         res.status(500).json({ error: '인증 처리 중 오류가 발생했습니다.' });
     }
 };
+
+// OPTIONS 요청 처리
+app.options('*', cors());
 
 // 헬스 체크 엔드포인트
 app.get('/api/health', (req, res) => {
