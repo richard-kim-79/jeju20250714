@@ -9,7 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "npm start",
     "heroku-postbuild": "echo 'Build completed'",
-    "railway": "node server-pg.js"
+    "railway": "node server-pg.js",
+    "build": "echo 'Build completed'"
   },
   "keywords": [
     "jeju",
