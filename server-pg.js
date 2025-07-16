@@ -321,5 +321,8 @@ app.put('/api/users/:id', authenticateUser, async (req, res) => {
 // 서버 시작
 app.listen(PORT, () => {
     console.log(`JeJu SNS 서버가 포트 ${PORT}에서 실행 중입니다.`);
-    console.log(`PostgreSQL 데이터베이스와 연결되었습니다.`);
+    console.log(`환경 변수 확인:`);
+    console.log(`- DATABASE_URL: ${process.env.DATABASE_URL ? '설정됨' : '설정되지 않음'}`);
+    console.log(`- NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`- PORT: ${PORT}`);
 }); 

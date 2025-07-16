@@ -13,9 +13,15 @@ const pool = new Pool({
     port: process.env.PGPORT || process.env.DB_PORT || 5432,
     max: 20, // 최대 연결 수
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000, // 연결 타임아웃 증가
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
+
+// 연결 상태 확인
+console.log('데이터베이스 연결 설정:');
+console.log('- DATABASE_URL:', process.env.DATABASE_URL ? '설정됨' : '설정되지 않음');
+console.log('- NODE_ENV:', process.env.NODE_ENV || 'development');
+console.log('- SSL:', process.env.NODE_ENV === 'production' ? '활성화' : '비활성화');
 
 // 데이터베이스 연결 테스트
 pool.on('connect', () => {
