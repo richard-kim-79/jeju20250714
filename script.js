@@ -107,6 +107,11 @@ class JejuSNS {
             ...options.headers
         };
 
+        // 사용자 ID 헤더 추가 (서버 인증용)
+        if (this.user && this.user.id) {
+            headers['user-id'] = this.user.id;
+        }
+
         if (this.apiKey) {
             headers['Authorization'] = `Bearer ${this.apiKey}`;
         }
