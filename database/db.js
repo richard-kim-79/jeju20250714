@@ -3,14 +3,18 @@ const bcrypt = require('bcryptjs');
 
 // PostgreSQL 연결 풀 생성
 const pool = new Pool({
-    user: process.env.DB_USER || 'seoyeonju',
-    host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'jeju_sns',
-    password: process.env.DB_PASSWORD || '',
-    port: process.env.DB_PORT || 5432,
+    // Railway DATABASE_URL 우선 사용
+    connectionString: process.env.DATABASE_URL,
+    // 개별 환경 변수는 폴백으로 사용
+    user: process.env.PGUSER || process.env.DB_USER || 'seoyeonju',
+    host: process.env.PGHOST || process.env.DB_HOST || 'localhost',
+    database: process.env.PGDATABASE || process.env.DB_NAME || 'jeju_sns',
+    password: process.env.PGPASSWORD || process.env.DB_PASSWORD || '',
+    port: process.env.PGPORT || process.env.DB_PORT || 5432,
     max: 20, // 최대 연결 수
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 // 데이터베이스 연결 테스트
