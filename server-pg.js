@@ -16,8 +16,10 @@ const PORT = process.env.PORT || 3001;
 app.use(cors({
     origin: ['http://localhost:3000', 'https://jeju20250714-btyv976q8-bluewhale2025.vercel.app'],
     credentials: true,
-    allowedHeaders: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+    allowedHeaders: ['Content-Type', 'Authorization', 'user-id', 'Accept', 'Origin', 'X-Requested-With'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
@@ -43,7 +45,13 @@ const authenticateUser = async (req, res, next) => {
 };
 
 // OPTIONS 요청 처리
-app.options('*', cors());
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, user-id, Accept, Origin, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.status(204).end();
+});
 
 // 헬스 체크 엔드포인트
 app.get('/api/health', (req, res) => {
