@@ -16,10 +16,8 @@ const PORT = process.env.PORT || 3001;
 app.use(cors({
     origin: ['http://localhost:3000', 'https://jeju20250714-btyv976q8-bluewhale2025.vercel.app'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'user-id', 'X-Requested-With'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204
+    allowedHeaders: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
