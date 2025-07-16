@@ -8,7 +8,8 @@
     "dev": "nodemon server-pg.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "npm start",
-    "heroku-postbuild": "echo 'Build completed'"
+    "heroku-postbuild": "echo 'Build completed'",
+    "railway": "node server-pg.js"
   },
   "keywords": [
     "jeju",
