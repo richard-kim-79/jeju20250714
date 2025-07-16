@@ -9,6 +9,9 @@ class JejuSNS {
         this.likes = [];
         this.isLoading = false;
         
+        // Railway 백엔드 URL
+        this.apiBaseUrl = 'https://web-production-1d58.up.railway.app';
+        
         // 카테고리 정의
         this.categories = [
             { id: 'all', name: '전체', icon: '🌴' },
@@ -28,9 +31,15 @@ class JejuSNS {
         this.loadDataFromStorage();
         this.setupEventListeners();
         
-        // 초기 데이터가 없으면 샘플 데이터 생성
-        if (this.posts.length === 0) {
-            this.createSampleData();
+        // Railway 백엔드에서 데이터 로드 시도
+        try {
+            await this.loadDataFromAPI();
+        } catch (error) {
+            console.log('API 연결 실패, localStorage 사용:', error);
+            // API 연결 실패시 localStorage 사용
+            if (this.posts.length === 0) {
+                this.createSampleData();
+            }
         }
         
         this.renderPosts();
@@ -87,6 +96,61 @@ class JejuSNS {
             localStorage.setItem('jejuLikes', JSON.stringify(this.likes));
         } catch (error) {
             console.error('데이터 저장 실패:', error);
+        }
+    }
+
+    // API 호출 헬퍼 메서드
+    async apiCall(endpoint, options = {}) {
+        const url = `${this.apiBaseUrl}${endpoint}`;
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+
+        if (this.apiKey) {
+            headers['Authorization'] = `Bearer ${this.apiKey}`;
+        }
+
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API 호출 실패:', error);
+            throw error;
+        }
+    }
+
+    // API에서 데이터 로드
+    async loadDataFromAPI() {
+        try {
+            // 게시글 로드
+            const postsResponse = await this.apiCall('/api/posts');
+            this.posts = postsResponse.posts || [];
+
+            // 사용자 로드
+            const usersResponse = await this.apiCall('/api/users');
+            this.users = usersResponse.users || [];
+
+            // 댓글 로드
+            const commentsResponse = await this.apiCall('/api/comments');
+            this.comments = commentsResponse.comments || [];
+
+            // 좋아요 로드
+            const likesResponse = await this.apiCall('/api/likes');
+            this.likes = likesResponse.likes || [];
+
+            console.log('API에서 데이터 로드 완료');
+        } catch (error) {
+            console.error('API 데이터 로드 실패:', error);
+            throw error;
         }
     }
 
@@ -693,6 +757,47 @@ class JejuSNS {
             return;
         }
 
+        try {
+            const postData = {
+                content,
+                category,
+                image: this.selectedImage || null,
+                author: this.user.displayName,
+                username: this.user.username,
+                avatar: '👤',
+                userId: this.user.id
+            };
+
+            // API 호출 시도
+            try {
+                const response = await this.apiCall('/api/posts', {
+                    method: 'POST',
+                    body: JSON.stringify(postData)
+                });
+
+                if (response.success) {
+                    this.posts.unshift(response.post);
+                    this.saveDataToStorage();
+                    this.renderPosts();
+                    this.showNotification('게시글이 등록되었습니다!');
+                    
+                    // 폼 초기화
+                    postContent.value = '';
+                    postCategory.value = 'all';
+                    this.removeImage();
+                }
+            } catch (apiError) {
+                console.log('API 호출 실패, localStorage 사용:', apiError);
+                // API 실패시 localStorage 사용
+                this.createLocalPost(content, category);
+            }
+        } catch (error) {
+            console.error('게시글 생성 실패:', error);
+            this.showNotification('게시글 등록에 실패했습니다.', 'error');
+        }
+    }
+
+    createLocalPost(content, category) {
         const newPost = {
             id: Date.now(),
             author: this.user.displayName,
@@ -711,14 +816,15 @@ class JejuSNS {
 
         this.posts.unshift(newPost);
         this.saveDataToStorage();
-        
-        // 폼 초기화
-        postContent.value = '';
-        postCategory.value = 'all';
-        this.removeImage();
-        
         this.renderPosts();
         this.showNotification('게시글이 작성되었습니다.');
+        
+        // 폼 초기화
+        const postContent = document.getElementById('postContent');
+        const postCategory = document.getElementById('postCategory');
+        if (postContent) postContent.value = '';
+        if (postCategory) postCategory.value = 'all';
+        this.removeImage();
     }
 
     handleLinkClick(content) {
@@ -865,28 +971,61 @@ class JejuSNS {
         const existingLike = this.likes.find(like => like.postId === postId && like.userId === this.user.id);
         const post = this.posts.find(p => p.id === postId);
 
-        if (existingLike) {
-            // 좋아요 취소
-            this.likes = this.likes.filter(like => like.id !== existingLike.id);
-            post.likes--;
-            btn.classList.remove('liked');
-            btn.querySelector('.icon').textContent = '🤍';
-        } else {
-            // 좋아요 추가
-            const newLike = {
-                id: Date.now(),
-                postId,
-                userId: this.user.id,
-                timestamp: new Date().toISOString()
-            };
-            this.likes.push(newLike);
-            post.likes++;
-            btn.classList.add('liked');
-            btn.querySelector('.icon').textContent = '❤️';
-        }
+        try {
+            if (existingLike) {
+                // 좋아요 취소 - API 호출 시도
+                try {
+                    await this.apiCall(`/api/likes/${existingLike.id}`, {
+                        method: 'DELETE'
+                    });
+                } catch (apiError) {
+                    console.log('API 호출 실패, localStorage 사용:', apiError);
+                }
+                
+                // localStorage 업데이트
+                this.likes = this.likes.filter(like => like.id !== existingLike.id);
+                post.likes--;
+                btn.classList.remove('liked');
+                btn.querySelector('.icon').textContent = '🤍';
+            } else {
+                // 좋아요 추가 - API 호출 시도
+                const likeData = {
+                    postId,
+                    userId: this.user.id
+                };
+                
+                try {
+                    const response = await this.apiCall('/api/likes', {
+                        method: 'POST',
+                        body: JSON.stringify(likeData)
+                    });
+                    
+                    if (response.success) {
+                        this.likes.push(response.like);
+                    }
+                } catch (apiError) {
+                    console.log('API 호출 실패, localStorage 사용:', apiError);
+                    // localStorage에 추가
+                    const newLike = {
+                        id: Date.now(),
+                        postId,
+                        userId: this.user.id,
+                        timestamp: new Date().toISOString()
+                    };
+                    this.likes.push(newLike);
+                }
+                
+                post.likes++;
+                btn.classList.add('liked');
+                btn.querySelector('.icon').textContent = '❤️';
+            }
 
-        btn.querySelector('.count').textContent = post.likes;
-        this.saveDataToStorage();
+            btn.querySelector('.count').textContent = post.likes;
+            this.saveDataToStorage();
+        } catch (error) {
+            console.error('좋아요 처리 실패:', error);
+            this.showNotification('좋아요 처리에 실패했습니다.', 'error');
+        }
     }
 
     toggleComments(postId) {
@@ -912,23 +1051,49 @@ class JejuSNS {
             return;
         }
 
-        const newComment = {
-            id: Date.now(),
-            postId,
-            userId: this.user.id,
-            author: this.user.displayName,
-            content,
-            timestamp: '방금 전'
-        };
+        try {
+            const commentData = {
+                postId,
+                userId: this.user.id,
+                author: this.user.displayName,
+                content
+            };
 
-        this.comments.push(newComment);
-        const post = this.posts.find(p => p.id === postId);
-        if (post) post.comments++;
+            // API 호출 시도
+            try {
+                const response = await this.apiCall('/api/comments', {
+                    method: 'POST',
+                    body: JSON.stringify(commentData)
+                });
 
-        this.saveDataToStorage();
-        this.renderPosts();
-        commentInput.value = '';
-        this.showNotification('댓글이 작성되었습니다.');
+                if (response.success) {
+                    this.comments.push(response.comment);
+                }
+            } catch (apiError) {
+                console.log('API 호출 실패, localStorage 사용:', apiError);
+                // localStorage에 추가
+                const newComment = {
+                    id: Date.now(),
+                    postId,
+                    userId: this.user.id,
+                    author: this.user.displayName,
+                    content,
+                    timestamp: '방금 전'
+                };
+                this.comments.push(newComment);
+            }
+
+            const post = this.posts.find(p => p.id === postId);
+            if (post) post.comments++;
+
+            this.saveDataToStorage();
+            this.renderPosts();
+            commentInput.value = '';
+            this.showNotification('댓글이 작성되었습니다.');
+        } catch (error) {
+            console.error('댓글 작성 실패:', error);
+            this.showNotification('댓글 작성에 실패했습니다.', 'error');
+        }
     }
 
     async deleteComment(postId, commentId) {
