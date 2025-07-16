@@ -40,6 +40,15 @@ const authenticateUser = async (req, res, next) => {
     }
 };
 
+// 헬스 체크 엔드포인트
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        message: 'JeJu SNS API 서버가 정상 작동 중입니다.',
+        timestamp: new Date().toISOString()
+    });
+});
+
 // 정적 파일 제공
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
