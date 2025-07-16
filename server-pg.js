@@ -15,7 +15,9 @@ const PORT = process.env.PORT || 3001;
 // 미들웨어 설정
 app.use(cors({
     origin: ['http://localhost:3000', 'https://jeju20250714-btyv976q8-bluewhale2025.vercel.app'],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'user-id'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
