@@ -11,6 +11,8 @@ const {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+// Railway에서 포트가 5432로 설정된 경우를 대비한 안전장치
+const SERVER_PORT = PORT === 5432 ? 3001 : PORT;
 
 // 미들웨어 설정
 app.use(cors({
@@ -319,10 +321,10 @@ app.put('/api/users/:id', authenticateUser, async (req, res) => {
 });
 
 // 서버 시작
-app.listen(PORT, () => {
-    console.log(`JeJu SNS 서버가 포트 ${PORT}에서 실행 중입니다.`);
+app.listen(SERVER_PORT, () => {
+    console.log(`JeJu SNS 서버가 포트 ${SERVER_PORT}에서 실행 중입니다.`);
     console.log(`환경 변수 확인:`);
     console.log(`- DATABASE_URL: ${process.env.DATABASE_URL ? '설정됨' : '설정되지 않음'}`);
     console.log(`- NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`- PORT: ${PORT}`);
+    console.log(`- PORT: ${PORT} (실제 사용: ${SERVER_PORT})`);
 }); 
