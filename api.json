@@ -1,0 +1,9 @@
+{
+  "status": "healthy",
+  "timestamp": "2024-07-15T10:53:00.000Z",
+  "users": 1,
+  "posts": 1,
+  "apiKeys": 1,
+  "message": "JeJu SNS API - 정적 버전",
+  "version": "1.0.0"
+} 
