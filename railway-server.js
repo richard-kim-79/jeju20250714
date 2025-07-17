@@ -35,6 +35,7 @@ app.use(cors({
     optionsSuccessStatus: 204
 }));
 app.use(express.json({ limit: '50mb' }));
+app.use(express.static('.'));
 app.use(express.static('public'));
 
 // 인증 미들웨어
