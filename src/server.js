@@ -16,9 +16,11 @@ const {
   commentLimiter,
   validateInput,
   ipBlocker,
-  authenticateUser,
   requireAdmin
 } = require('./middleware/security');
+
+// JWT 인증 미들웨어 import
+const { authenticateUser } = require('./middleware/auth');
 
 // 기존 데이터베이스 쿼리 import (호환성 유지)
 const { 
@@ -88,6 +90,10 @@ app.get('/health', (req, res) => {
     version: process.env.npm_package_version || '1.0.0'
   });
 });
+
+// JWT 인증 라우트 추가
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
 
 // API 라우트 설정
 // 사용자 관련 API
