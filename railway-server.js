@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 const { 
     userQueries, 
@@ -15,8 +16,18 @@ const PORT = process.env.PORT || 3001;
 const SERVER_PORT = PORT === 5432 ? 3001 : PORT;
 
 // 미들웨어 설정
+app.use(compression({
+    level: 6,
+    threshold: 0,
+    filter: (req, res) => {
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        return compression.filter(req, res);
+    }
+}));
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://jeju20250714-btyv976q8-bluewhale2025.vercel.app'],
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'https://jejusns.com', 'http://jejusns.com', 'https://jeju20250714-btyv976q8-bluewhale2025.vercel.app'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'user-id', 'Accept', 'Origin', 'X-Requested-With'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -24,6 +35,7 @@ app.use(cors({
     optionsSuccessStatus: 204
 }));
 app.use(express.json({ limit: '50mb' }));
+app.use(express.static('.'));
 app.use(express.static('public'));
 
 // 인증 미들웨어
@@ -321,9 +333,11 @@ app.put('/api/users/:id', authenticateUser, async (req, res) => {
 });
 
 // 서버 시작
-app.listen(SERVER_PORT, () => {
+app.listen(SERVER_PORT, '0.0.0.0', () => {
     console.log(`=== JeJu SNS PostgreSQL 서버 시작 ===`);
     console.log(`JeJu SNS 서버가 포트 ${SERVER_PORT}에서 실행 중입니다.`);
+    console.log(`외부 접속 주소: http://0.0.0.0:${SERVER_PORT}`);
+    console.log(`로컬 접속 주소: http://localhost:${SERVER_PORT}`);
     console.log(`환경 변수 확인:`);
     console.log(`- DATABASE_URL: ${process.env.DATABASE_URL ? '설정됨' : '설정되지 않음'}`);
     console.log(`- NODE_ENV: ${process.env.NODE_ENV || 'development'}`);

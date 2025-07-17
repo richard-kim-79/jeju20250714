@@ -13,7 +13,8 @@ const pool = new Pool({
     port: process.env.PGPORT || process.env.DB_PORT || 5432,
     max: 20, // 최대 연결 수
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000, // 연결 타임아웃 증가
+    connectionTimeoutMillis: 2000, // 연결 타임아웃 최적화
+    maxUses: 7500, // 연결 재사용 후 종료
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
@@ -58,9 +59,9 @@ const userQueries = {
         return result.rows[0];
     },
 
-    // 이메일로 사용자 찾기
+    // 이메일로 사용자 찾기 - 최적화된 쿼리
     findByEmail: async (email) => {
-        const query = 'SELECT * FROM users WHERE email = $1';
+        const query = 'SELECT id, email, display_name, username, password_hash, created_at, is_admin FROM users WHERE email = $1';
         const result = await pool.query(query, [email]);
         return result.rows[0];
     },
@@ -72,9 +73,9 @@ const userQueries = {
         return result.rows[0];
     },
 
-    // 사용자명으로 사용자 찾기
+    // 사용자명으로 사용자 찾기 - 최적화된 쿼리
     findByUsername: async (username) => {
-        const query = 'SELECT * FROM users WHERE username = $1';
+        const query = 'SELECT id, email, display_name, username, password_hash, created_at, is_admin FROM users WHERE username = $1';
         const result = await pool.query(query, [username]);
         return result.rows[0];
     },
