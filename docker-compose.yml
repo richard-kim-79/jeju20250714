@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # 메인 애플리케이션
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://jeju_user:jeju_password@db:5432/jeju_sns
+      - JWT_SECRET=dev-jwt-secret-key
+      - LOG_LEVEL=debug
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - jeju-network
+
+  # PostgreSQL 데이터베이스
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=jeju_sns
+      - POSTGRES_USER=jeju_user
+      - POSTGRES_PASSWORD=jeju_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - jeju-network
+
+  # Redis (캐싱용)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - jeju-network
+
+  # Nginx (리버스 프록시)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - jeju-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  jeju-network:
+    driver: bridge

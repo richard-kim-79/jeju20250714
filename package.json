@@ -1,33 +1,52 @@
 {
   "name": "jeju-sns-platform",
-  "version": "1.0.0",
-  "description": "JeJu 지역 정보 공유 SNS 플랫폼",
-  "main": "railway-server.js",
+  "version": "2.0.0",
+  "description": "JeJu 지역 정보 공유 SNS 플랫폼 - 새로운 배포 전략",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node railway-server.js",
-    "dev": "nodemon railway-server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "npm start",
-    "heroku-postbuild": "echo 'Build completed'",
-    "railway": "node railway-server.js",
+    "start": "NODE_ENV=production node src/server.js",
+    "dev": "NODE_ENV=development nodemon src/server.js",
+    "beta": "NODE_ENV=beta node src/server.js",
+    "test": "NODE_ENV=test jest",
+    "test:watch": "NODE_ENV=test jest --watch",
     "build": "echo 'Build completed'",
-    "railway-start": "node railway-server.js"
+    "migrate": "node database/migrate.js",
+    "seed": "node database/seed.js",
+    "logs": "tail -f logs/combined.log",
+    "logs:error": "tail -f logs/error.log",
+    "railway": "NODE_ENV=production node src/server.js",
+    "railway-start": "NODE_ENV=production node src/server.js",
+    "heroku-postbuild": "npm run build",
+    "deploy:railway": "railway up",
+    "deploy:vercel": "vercel --prod",
+    "deploy:heroku": "git push heroku main"
   },
   "keywords": [
     "jeju",
     "sns",
     "community",
     "local",
-    "information"
+    "information",
+    "social",
+    "platform"
   ],
   "author": "JeJu Team",
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.2",
+    "compression": "^1.8.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "pg": "^8.16.3"
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^7.2.0",
+    "pg": "^8.16.3",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^6.3.3"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -35,7 +54,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jeju-team/jeju-sns-platform.git"
+    "url": "https://github.com/richard-kim-79/jeju20250714.git"
   },
-  "homepage": "https://jeju-sns-platform.herokuapp.com"
+  "homepage": "https://jeju-sns.com",
+  "bugs": {
+    "url": "https://github.com/richard-kim-79/jeju20250714/issues"
+  }
 }
