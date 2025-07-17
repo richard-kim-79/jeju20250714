@@ -3,7 +3,7 @@ const config = {
   // API 엔드포인트 설정
   API_BASE_URL: window.location.hostname === 'localhost' 
     ? 'http://localhost:3001' 
-    : 'https://jeju-sns.railway.app',
+    : 'https://jeju-sns-backend-2024-479e4b8e48f6.herokuapp.com',
   
   // 앱 정보
   APP_NAME: 'JeJu SNS',
