@@ -1,0 +1,10 @@
+{
+  "name": "jeju-sns-frontend",
+  "version": "1.0.0",
+  "description": "JeJu SNS Frontend - Static files for Vercel deployment",
+  "scripts": {
+    "deploy": "vercel --prod"
+  },
+  "author": "JeJu Team",
+  "license": "MIT"
+}

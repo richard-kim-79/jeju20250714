@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JeJu SNS 관리자 대시보드</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>body { background: #f8fafc; }</style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8">
+    <div class="w-full max-w-2xl bg-white rounded-lg shadow p-6">
+        <h1 class="text-2xl font-bold text-orange-600 mb-6">🍊 JeJu SNS 관리자 대시보드</h1>
+        <div id="adminLoginSection" class="mb-6">
+            <input id="adminPassword" type="password" autocomplete="current-password" placeholder="관리자 비밀번호" class="border px-3 py-2 rounded mr-2">
+            <button id="adminLoginBtn" class="bg-orange-600 text-white px-4 py-2 rounded">로그인</button>
+            <span id="adminLoginMsg" class="text-red-500 text-sm ml-2"></span>
+        </div>
+        <div id="dashboard" class="hidden">
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-orange-50 rounded p-4 text-center">
+                    <div class="text-lg font-bold" id="statPosts">-</div>
+                    <div class="text-xs text-gray-500">전체 게시글</div>
+                </div>
+                <div class="bg-orange-50 rounded p-4 text-center">
+                    <div class="text-lg font-bold" id="statComments">-</div>
+                    <div class="text-xs text-gray-500">전체 댓글</div>
+                </div>
+                <div class="bg-orange-50 rounded p-4 text-center">
+                    <div class="text-lg font-bold" id="statUsers">-</div>
+                    <div class="text-xs text-gray-500">API 키 발급 유저</div>
+                </div>
+                <div class="bg-orange-50 rounded p-4 text-center">
+                    <div class="text-lg font-bold" id="statKeys">-</div>
+                    <div class="text-xs text-gray-500">API 키 수</div>
+                </div>
+            </div>
+            <h2 class="text-lg font-bold mb-2">게시글 관리</h2>
+            <div id="postsTable" class="overflow-x-auto mb-6"></div>
+            <h2 class="text-lg font-bold mb-2">API 키 관리</h2>
+            <div id="keysTable" class="overflow-x-auto"></div>
+        </div>
+    </div>
+    <script src="admin.js"></script>
+</body>
+</html> 

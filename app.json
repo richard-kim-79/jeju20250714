@@ -1,0 +1,40 @@
+{
+  "name": "JeJu SNS Platform",
+  "description": "제주 부동산·구인구직·여행정보 커뮤니티 SNS 백엔드",
+  "repository": "https://github.com/richard-kim-79/jeju20250714",
+  "logo": "https://raw.githubusercontent.com/richard-kim-79/jeju20250714/main/logo.png",
+  "keywords": ["node", "express", "postgresql", "sns", "jeju"],
+  "image": "heroku/nodejs",
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini",
+      "options": {
+        "version": "15"
+      }
+    }
+  ],
+  "env": {
+    "NODE_ENV": {
+      "description": "Node.js environment",
+      "value": "production"
+    },
+    "NPM_CONFIG_PRODUCTION": {
+      "description": "Install devDependencies",
+      "value": "false"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "scripts": {
+    "postdeploy": "psql $DATABASE_URL -f database/schema.sql && psql $DATABASE_URL -f database/add_indexes.sql"
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
