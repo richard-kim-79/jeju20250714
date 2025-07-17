@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+    
+    <!-- 메인 페이지 -->
+    <url>
+        <loc>https://jeju-sns.com/</loc>
+        <lastmod>2024-12-17</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+    
+    <!-- 부동산 카테고리 -->
+    <url>
+        <loc>https://jeju-sns.com/category/부동산</loc>
+        <lastmod>2024-12-17</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+    </url>
+    
+    <!-- 구인구직 카테고리 -->
+    <url>
+        <loc>https://jeju-sns.com/category/구인구직</loc>
+        <lastmod>2024-12-17</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+    </url>
+    
+    <!-- 여행정보 카테고리 -->
+    <url>
+        <loc>https://jeju-sns.com/category/여행정보</loc>
+        <lastmod>2024-12-17</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+    </url>
+    
+    <!-- 뉴스 카테고리 -->
+    <url>
+        <loc>https://jeju-sns.com/category/뉴스</loc>
+        <lastmod>2024-12-17</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <!-- 행사 카테고리 -->
+    <url>
+        <loc>https://jeju-sns.com/category/행사</loc>
+        <lastmod>2024-12-17</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <!-- 맛집 카테고리 -->
+    <url>
+        <loc>https://jeju-sns.com/category/맛집</loc>
+        <lastmod>2024-12-17</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <!-- 관광지 카테고리 -->
+    <url>
+        <loc>https://jeju-sns.com/category/관광지</loc>
+        <lastmod>2024-12-17</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <!-- 일반 카테고리 -->
+    <url>
+        <loc>https://jeju-sns.com/category/일반</loc>
+        <lastmod>2024-12-17</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    
+    <!-- 생활정보 카테고리 -->
+    <url>
+        <loc>https://jeju-sns.com/category/생활정보</loc>
+        <lastmod>2024-12-17</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    
+</urlset>
