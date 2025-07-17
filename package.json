@@ -8,7 +8,7 @@
     "dev": "nodemon railway-server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "npm run build && npm start",
-    "heroku-postbuild": "npm run build",
+    "heroku-postbuild": "echo 'Skipping build for now'",
     "railway": "node railway-server.js",
     "build": "npx tailwindcss -i ./src/styles.css -o ./styles-optimized.css --minify",
     "build:watch": "npx tailwindcss -i ./src/styles.css -o ./styles-optimized.css --watch",
