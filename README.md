@@ -472,9 +472,8 @@ npm run test:load
 프로젝트에 대한 문의사항이나 개선 제안이 있으시면 언제든 연락주세요.
 
 ### 연락처
-- **이메일**: contact@jeju-sns.com
-- **GitHub**: https://github.com/jeju-sns
-- **문서**: https://docs.jeju-sns.com
+- **이메일**: blueslap@naver.com
+- **문서**: https://docs.jejusns.com
 
 ---
 
