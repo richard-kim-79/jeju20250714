@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "server.js",
+      "src": "railway-server.js",
       "use": "@vercel/node"
     },
     {
@@ -25,11 +25,16 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/server.js"
+      "dest": "/railway-server.js"
     },
     {
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ]
+  ],
+  "functions": {
+    "railway-server.js": {
+      "maxDuration": 30
+    }
+  }
 } 
