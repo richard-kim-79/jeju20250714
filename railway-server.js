@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 const { 
     userQueries, 
@@ -15,6 +16,16 @@ const PORT = process.env.PORT || 3001;
 const SERVER_PORT = PORT === 5432 ? 3001 : PORT;
 
 // 미들웨어 설정
+app.use(compression({
+    level: 6,
+    threshold: 0,
+    filter: (req, res) => {
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        return compression.filter(req, res);
+    }
+}));
 app.use(cors({
     origin: ['http://localhost:3000', 'https://jeju20250714-btyv976q8-bluewhale2025.vercel.app'],
     credentials: true,
