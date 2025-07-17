@@ -95,6 +95,13 @@ app.get('/health', (req, res) => {
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
+// 파일 업로드 라우트 추가
+const uploadRoutes = require('./routes/upload');
+app.use('/api/upload', uploadRoutes);
+
+// 정적 파일 서빙 (업로드된 파일)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // API 라우트 설정
 // 사용자 관련 API
 app.post('/api/users/register', loginLimiter, async (req, res) => {
