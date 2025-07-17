@@ -153,44 +153,53 @@ body {
     align-items: center;
     gap: 0.25rem;
     padding: 0.5rem 0.75rem;
-    border: 1px solid var(--jeju-gray-light);
-    background-color: var(--jeju-white);
+    border: 1px solid #e5e7eb;
+    background-color: #fff;
     cursor: pointer;
     border-radius: 0.5rem;
     transition: all 0.2s ease;
-    color: var(--jeju-gray);
+    color: #374151;
     font-weight: 500;
-    box-shadow: var(--jeju-shadow);
+    box-shadow: none;
     min-width: 60px;
     justify-content: center;
 }
 
 .action-btn:hover {
-    background-color: var(--jeju-orange-light);
-    color: var(--jeju-orange);
-    border-color: var(--jeju-orange);
+    background-color: #f3f4f6;
+    color: #ea580c;
+    border-color: #f3f4f6;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.2);
+    box-shadow: none;
 }
 
 .action-btn.liked {
-    color: var(--jeju-red);
-    background-color: #fef2f2;
-    border-color: var(--jeju-red);
+    color: #ef4444;
+    background-color: #fff;
+    border-color: #e5e7eb;
+    box-shadow: none;
 }
 
 .action-btn.liked:hover {
-    background-color: #fee2e2;
-    color: var(--jeju-red);
+    background-color: #fef2f2;
+    color: #ef4444;
+    border-color: #fef2f2;
+    box-shadow: none;
 }
 
 .icon {
     font-size: 1.125rem;
+    color: #6b7280;
+}
+
+.like-btn.liked .icon {
+    color: #ef4444;
 }
 
 .count {
     font-size: 0.875rem;
     font-weight: 500;
+    color: #374151;
 }
 
 /* 댓글 스타일 */
