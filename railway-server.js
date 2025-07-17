@@ -27,7 +27,7 @@ app.use(compression({
     }
 }));
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://jeju20250714-btyv976q8-bluewhale2025.vercel.app'],
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'https://jejusns.com', 'http://jejusns.com', 'https://jeju20250714-btyv976q8-bluewhale2025.vercel.app'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'user-id', 'Accept', 'Origin', 'X-Requested-With'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
