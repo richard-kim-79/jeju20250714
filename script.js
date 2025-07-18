@@ -613,11 +613,11 @@ class JejuSNS {
     updateUserInterface() {
         const loginBtn = document.getElementById('loginBtn');
         const userInfo = document.getElementById('userInfo');
-        const profileBtn = document.getElementById('profileBtn');
+        const apiBtn = document.getElementById('apiBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const postForm = document.getElementById('postForm');
 
-        if (!loginBtn || !userInfo || !profileBtn || !logoutBtn) {
+        if (!loginBtn || !userInfo || !logoutBtn) {
             console.error('사용자 인터페이스 요소를 찾을 수 없습니다.');
             return;
         }
@@ -626,8 +626,6 @@ class JejuSNS {
             // 로그인된 상태 - 홈 화면 + 게시글 작성 기능
             loginBtn.style.display = 'none';
             userInfo.style.display = 'flex';
-            profileBtn.style.display = 'inline-block';
-            logoutBtn.style.display = 'inline-block';
             
             // 게시글 작성 폼 표시 (로그인한 사용자만)
             if (postForm) {
@@ -635,16 +633,16 @@ class JejuSNS {
             }
             
             const userDisplayName = document.getElementById('userDisplayName');
-            const userUsername = document.getElementById('userUsername');
+            const userAvatar = document.getElementById('userAvatar');
+            const userAvatarInForm = document.getElementById('userAvatarInForm');
             
             if (userDisplayName) userDisplayName.textContent = this.user.displayName;
-            if (userUsername) userUsername.textContent = this.user.username;
+            if (userAvatar) userAvatar.textContent = this.user.avatar || '👤';
+            if (userAvatarInForm) userAvatarInForm.textContent = this.user.avatar || '👤';
         } else {
             // 로그인되지 않은 상태 - 홈 화면만 (게시글 목록 중심)
             loginBtn.style.display = 'inline-block';
             userInfo.style.display = 'none';
-            profileBtn.style.display = 'none';
-            logoutBtn.style.display = 'none';
             
             // 게시글 작성 폼 숨김 (로그인 필요)
             if (postForm) {
@@ -652,10 +650,10 @@ class JejuSNS {
             }
         }
 
-        // 로그인 버튼 이벤트 연결
+        // 버튼 이벤트 연결
         if (loginBtn) loginBtn.onclick = () => this.showLoginModal();
         if (logoutBtn) logoutBtn.onclick = () => this.handleLogout();
-        if (profileBtn) profileBtn.onclick = () => this.showProfileModal();
+        if (apiBtn) apiBtn.onclick = () => this.showApiModal();
     }
 
     async generateApiKey() {
@@ -844,8 +842,12 @@ class JejuSNS {
             const category = btn.dataset.category;
             if (this.selectedCategories.has(category)) {
                 btn.classList.add('active');
+                btn.classList.remove('hover:bg-gray-100', 'border-transparent');
+                btn.classList.add('bg-orange-100', 'text-orange-600', 'border-orange-300');
             } else {
                 btn.classList.remove('active');
+                btn.classList.remove('bg-orange-100', 'text-orange-600', 'border-orange-300');
+                btn.classList.add('hover:bg-gray-100', 'border-transparent');
             }
         });
     }
@@ -895,66 +897,79 @@ class JejuSNS {
         const postComments = this.comments.filter(comment => comment.postId === post.id);
         
         return `
-            <div class="post" data-post-id="${post.id}">
-                <div class="post-header">
-                    <div class="post-author">
-                        <span class="avatar">${post.avatar}</span>
-                        <div class="author-info">
-                            <div class="author-name">${post.author}</div>
-                            <div class="author-username">${post.username}</div>
+            <div class="bg-white border-b border-gray-200 p-3 hover:bg-gray-50 transition-colors" data-post-id="${post.id}">
+                <div class="flex space-x-2">
+                    <div class="text-lg">${post.avatar}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center space-x-1 mb-1">
+                            <span class="text-sm font-bold text-gray-900">${post.author}</span>
+                            <span class="text-xs text-gray-500">${post.username}</span>
+                            <span class="text-xs text-gray-500">·</span>
+                            <span class="text-xs text-gray-500">${post.timestamp}</span>
+                            <span class="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-full">
+                                ${this.categories.find(cat => cat.id === post.category)?.icon || '📝'}
+                                ${this.categories.find(cat => cat.id === post.category)?.name || post.category}
+                            </span>
+                        </div>
+                        
+                        <div class="text-sm text-gray-900 mb-2">
+                            ${post.hasLink ? 
+                                `<span class="cursor-pointer hover:text-blue-600" onclick="jejuSNS.handleLinkClick('${post.content}')">${this.formatContent(post.content)}</span>` : 
+                                this.formatContent(post.content)
+                            }
+                        </div>
+
+                        ${post.image ? `
+                            <div class="mb-2">
+                                <img src="${post.image}" alt="게시글 이미지" class="max-w-full h-auto rounded-lg border max-h-48">
+                            </div>
+                        ` : ''}
+
+                        <div class="flex items-center space-x-6 text-gray-500 text-sm">
+                            <button class="flex items-center space-x-1 hover:text-blue-600 transition-colors" onclick="jejuSNS.toggleComments(${post.id})">
+                                <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                <span class="text-xs">${postComments.length}</span>
+                            </button>
+                            <button class="flex items-center space-x-1 hover:text-green-600 transition-colors">
+                                <i data-lucide="repeat-2" class="w-4 h-4"></i>
+                                <span class="text-xs">${post.retweets}</span>
+                            </button>
+                            <button class="flex items-center space-x-1 hover:text-red-600 transition-colors ${isLiked ? 'text-red-600' : ''}" onclick="jejuSNS.toggleLike(${post.id}, this)">
+                                <i data-lucide="heart" class="w-4 h-4 ${isLiked ? 'fill-current' : ''}"></i>
+                                <span class="text-xs">${post.likes}</span>
+                            </button>
+                            <button class="flex items-center space-x-1 hover:text-blue-600 transition-colors">
+                                <i data-lucide="share" class="w-4 h-4"></i>
+                            </button>
+                            ${this.user && (this.user.id === post.userId || this.user.isAdmin) ? 
+                                `<button class="flex items-center space-x-1 hover:text-red-600 transition-colors" onclick="jejuSNS.deletePost(${post.id})">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>` : ''
+                            }
                         </div>
                     </div>
-                    <div class="post-meta">
-                        <span class="timestamp">${post.timestamp}</span>
-                        <span class="category-badge">${this.categories.find(c => c.id === post.category)?.icon || '📝'} ${this.categories.find(c => c.id === post.category)?.name || post.category}</span>
-                    </div>
                 </div>
                 
-                <div class="post-content">
-                    <p>${this.formatContent(post.content)}</p>
-                    ${post.image ? `<img src="${post.image}" alt="게시글 이미지" class="post-image">` : ''}
-                </div>
-                
-                <div class="post-actions">
-                    <button class="action-btn like-btn ${isLiked ? 'liked' : ''}" onclick="jejuSNS.toggleLike(${post.id}, this)">
-                        <span class="icon">${isLiked ? '❤️' : '🤍'}</span>
-                        <span class="count">${post.likes}</span>
-                    </button>
-                    <button class="action-btn comment-btn" onclick="jejuSNS.toggleComments(${post.id})">
-                        <span class="icon">💬</span>
-                        <span class="count">${postComments.length}</span>
-                    </button>
-                    <button class="action-btn retweet-btn">
-                        <span class="icon">🔄</span>
-                        <span class="count">${post.retweets}</span>
-                    </button>
-                    ${this.user && (this.user.id === post.userId || this.user.isAdmin) ? 
-                        `<button class="action-btn delete-btn" onclick="jejuSNS.deletePost(${post.id})">
-                            <span class="icon">🗑️</span>
-                        </button>` : ''
-                    }
-                </div>
-                
-                <div class="comments-section" id="comments-${post.id}" style="display: none;">
-                    <div class="comments-list">
+                <div class="comments-section mt-3 border-t border-gray-100 pt-3" id="comments-${post.id}" style="display: none;">
+                    <div class="comments-list space-y-2">
                         ${postComments.map(comment => `
-                            <div class="comment" data-comment-id="${comment.id}">
-                                <div class="comment-author">
-                                    <span class="avatar">👤</span>
-                                    <span class="author-name">${comment.author}</span>
-                                    <span class="timestamp">${comment.timestamp}</span>
+                            <div class="comment bg-gray-50 rounded-lg p-2" data-comment-id="${comment.id}">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <span class="text-sm">👤</span>
+                                    <span class="text-sm font-medium">${comment.author}</span>
+                                    <span class="text-xs text-gray-500">${comment.timestamp}</span>
+                                    ${this.user && (this.user.id === comment.userId || this.user.isAdmin) ? 
+                                        `<button class="text-xs text-red-600 hover:text-red-700" onclick="jejuSNS.deleteComment(${post.id}, ${comment.id})">삭제</button>` : ''
+                                    }
                                 </div>
-                                <div class="comment-content">${comment.content}</div>
-                                ${this.user && (this.user.id === comment.userId || this.user.isAdmin) ? 
-                                    `<button class="delete-comment-btn" onclick="jejuSNS.deleteComment(${post.id}, ${comment.id})">삭제</button>` : ''
-                                }
+                                <div class="text-sm text-gray-700">${comment.content}</div>
                             </div>
                         `).join('')}
                     </div>
                     ${this.user ? `
-                        <div class="comment-form">
-                            <input type="text" placeholder="댓글을 입력하세요..." id="comment-input-${post.id}">
-                            <button onclick="jejuSNS.submitComment(${post.id})">댓글</button>
+                        <div class="comment-form mt-3 flex space-x-2">
+                            <input type="text" placeholder="댓글을 입력하세요..." id="comment-input-${post.id}" class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <button onclick="jejuSNS.submitComment(${post.id})" class="px-3 py-1 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">댓글</button>
                         </div>
                     ` : ''}
                 </div>
