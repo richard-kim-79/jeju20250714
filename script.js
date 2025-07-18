@@ -623,13 +623,13 @@ class JejuSNS {
         }
 
         if (this.user) {
-            // 로그인된 상태
+            // 로그인된 상태 - 홈 화면 + 게시글 작성 기능
             loginBtn.style.display = 'none';
             userInfo.style.display = 'flex';
             profileBtn.style.display = 'inline-block';
             logoutBtn.style.display = 'inline-block';
             
-            // 게시글 작성 폼 표시
+            // 게시글 작성 폼 표시 (로그인한 사용자만)
             if (postForm) {
                 postForm.classList.remove('hidden');
             }
@@ -640,13 +640,13 @@ class JejuSNS {
             if (userDisplayName) userDisplayName.textContent = this.user.displayName;
             if (userUsername) userUsername.textContent = this.user.username;
         } else {
-            // 로그인되지 않은 상태
+            // 로그인되지 않은 상태 - 홈 화면만 (게시글 목록 중심)
             loginBtn.style.display = 'inline-block';
             userInfo.style.display = 'none';
             profileBtn.style.display = 'none';
             logoutBtn.style.display = 'none';
             
-            // 게시글 작성 폼 숨김
+            // 게시글 작성 폼 숨김 (로그인 필요)
             if (postForm) {
                 postForm.classList.add('hidden');
             }
