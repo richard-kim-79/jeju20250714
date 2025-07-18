@@ -213,7 +213,7 @@ class JejuSNS {
         navItems.forEach(nav => nav.classList.remove('active'));
         navItems[index].classList.add('active');
 
-        const views = ['home', 'search', 'region', 'likes', 'profile'];
+        const views = ['home', 'search', 'recommend', 'likes', 'profile'];
         this.currentView = views[index];
         
         // 뷰에 따른 UI 업데이트
@@ -243,13 +243,13 @@ class JejuSNS {
                 if (postForm) postForm.style.display = 'none';
                 break;
                 
-            case 'region':
-                // 지역 뷰: 지역 관련 카테고리만
-                if (searchInput) searchInput.placeholder = "지역 정보 검색...";
+            case 'recommend':
+                // 추천 뷰: 추천 게시글 표시
+                if (searchInput) searchInput.placeholder = "추천 콘텐츠 검색...";
                 if (postForm) postForm.style.display = 'block';
                 this.selectedCategories.clear();
-                this.selectedCategories.add('events');
-                this.selectedCategories.add('policy');
+                this.selectedCategories.add('all');
+                this.showRecommendedPosts();
                 break;
                 
             case 'likes':
@@ -296,6 +296,17 @@ class JejuSNS {
         );
         
         this.renderFilteredPosts(myPosts);
+    }
+
+    // 추천 게시글 표시
+    showRecommendedPosts() {
+        // 좋아요가 많은 게시글을 우선적으로 표시
+        const recommendedPosts = this.posts
+            .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+            .slice(0, 10); // 상위 10개
+        
+        this.renderFilteredPosts(recommendedPosts);
+        this.showNotification('추천 콘텐츠를 불러왔습니다.');
     }
 
     // 카테고리 선택

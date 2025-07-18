@@ -923,7 +923,7 @@ body {
         gap: 8px;
         padding: 8px 12px;
         background: none;
-        border: 1px solid #dbdbdb;
+        border: none;
         border-radius: 6px;
         color: #262626;
         font-size: 12px;
