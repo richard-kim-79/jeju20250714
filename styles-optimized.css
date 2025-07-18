@@ -911,6 +911,30 @@ body {
         display: none;
     }
     
+    /* 모바일에서 로그인 버튼을 헤더에 추가 */
+    .mobile-login-btn {
+        display: none;
+    }
+    
+    /* 모바일 헤더에 로그인 버튼 표시 */
+    .header-actions .mobile-login-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: none;
+        border: 1px solid #dbdbdb;
+        border-radius: 6px;
+        color: #262626;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .header-actions .mobile-login-btn:hover {
+        background-color: #f8f9fa;
+    }
+    
     .main-content {
         margin-left: 0;
         margin-bottom: 60px;

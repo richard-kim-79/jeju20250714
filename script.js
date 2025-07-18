@@ -43,6 +43,14 @@ class JejuSNS {
             });
         }
 
+        // 모바일 로그인 버튼
+        const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+        if (mobileLoginBtn) {
+            mobileLoginBtn.addEventListener('click', () => {
+                this.showLoginModal();
+            });
+        }
+
         // 로그아웃 버튼
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
@@ -798,36 +806,49 @@ class JejuSNS {
     updateUserInterface() {
         const loginBtn = document.getElementById('loginBtn');
         const userInfo = document.getElementById('userInfo');
-        const userAvatar = document.getElementById('userAvatar');
-        const userDisplayName = document.getElementById('userDisplayName');
-        const userUsername = document.getElementById('userUsername');
-        const userAvatarInForm = document.getElementById('userAvatarInForm');
-
-        if (!loginBtn || !userInfo) {
-            console.error('사용자 인터페이스 요소를 찾을 수 없습니다.');
-            return;
-        }
-
+        const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+        
         if (this.user) {
-            loginBtn.style.display = 'none';
-            userInfo.style.display = 'flex';
+            // 로그인된 상태
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (userInfo) userInfo.style.display = 'flex';
+            if (mobileLoginBtn) {
+                mobileLoginBtn.innerHTML = `
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                    <span>${this.user.displayName}</span>
+                `;
+                mobileLoginBtn.onclick = () => this.handleLogout();
+            }
             
-            if (userDisplayName) {
-                userDisplayName.textContent = this.user.displayName;
-            }
-            if (userUsername) {
-                userUsername.textContent = this.user.username;
-            }
-            if (userAvatar) {
-                userAvatar.textContent = this.user.avatar;
-            }
-            if (userAvatarInForm) {
-                userAvatarInForm.textContent = this.user.avatar;
-            }
+            // 사용자 정보 업데이트
+            const userDisplayName = document.getElementById('userDisplayName');
+            const userUsername = document.getElementById('userUsername');
+            const userAvatar = document.getElementById('userAvatar');
+            const userAvatarInForm = document.getElementById('userAvatarInForm');
+            
+            if (userDisplayName) userDisplayName.textContent = this.user.displayName;
+            if (userUsername) userUsername.textContent = `@${this.user.username}`;
+            if (userAvatar) userAvatar.textContent = this.user.avatar;
+            if (userAvatarInForm) userAvatarInForm.textContent = this.user.avatar;
+            
+            this.activatePostForm();
         } else {
-            loginBtn.style.display = 'flex';
-            userInfo.style.display = 'none';
+            // 로그아웃된 상태
+            if (loginBtn) loginBtn.style.display = 'flex';
+            if (userInfo) userInfo.style.display = 'none';
+            if (mobileLoginBtn) {
+                mobileLoginBtn.innerHTML = `
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span>로그인</span>
+                `;
+                mobileLoginBtn.onclick = () => this.showLoginModal();
+            }
+            
+            this.updatePostFormForGuest();
         }
+        
+        // Lucide 아이콘 다시 로드
+        this.loadLucideIcons();
     }
 
     // 글쓰기 폼 활성화
