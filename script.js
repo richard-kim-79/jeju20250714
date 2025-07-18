@@ -2,234 +2,64 @@
 class JejuSNS {
     constructor() {
         this.user = null;
-        this.apiKey = '';
         this.posts = [];
-        this.users = [];
-        this.comments = [];
-        this.likes = [];
-        this.isLoading = false;
-        
-        // Railway 백엔드 URL
-        this.apiBaseUrl = 'https://web-production-1d58.up.railway.app';
-        
-        // 카테고리 정의
+        this.selectedCategories = new Set(['all']); // 다중 선택 지원
+        this.selectedPostCategory = 'news'; // 게시글 작성용 카테고리
+        this.selectedImage = null;
+        this.apiKey = '';
+        this.currentView = 'home'; // 현재 보기: home, search, region, likes, profile
         this.categories = [
             { id: 'all', name: '전체', icon: '🌴' },
             { id: 'jobs', name: '구인구직', icon: '💼' },
             { id: 'realestate', name: '부동산', icon: '🏠' },
             { id: 'events', name: '지역행사', icon: '🎉' },
             { id: 'policy', name: '정책지원', icon: '📋' },
-            { id: 'news', name: '지역뉴스', icon: '📰' },
-            { id: 'debate', name: '난상토론', icon: '💬' }
+            { id: 'news', name: '지역뉴스', icon: '📰' }
         ];
-
-        this.selectedCategories = new Set(['all']); // 다중 선택 지원
+        
         this.init();
     }
 
-    async init() {
+    init() {
         this.loadDataFromStorage();
         this.setupEventListeners();
-        
-        // Railway 백엔드에서 데이터 로드 시도
-        try {
-            await this.loadDataFromAPI();
-        } catch (error) {
-            console.log('API 연결 실패, localStorage 사용:', error);
-            // API 연결 실패시 localStorage 사용
-            if (this.posts.length === 0) {
-                this.createSampleData();
-            }
-        }
-        
-        this.renderPosts();
         this.updateUserInterface();
-        
-        // 디버그: 필수 요소들이 존재하는지 확인
-        this.debugElements();
+        this.renderPosts();
+        this.loadLucideIcons();
     }
 
-    debugElements() {
-        const requiredElements = [
-            'postsContainer',
-            'loginBtn',
-            'userInfo',
-            'searchInput',
-            'postContent',
-            'submitPost',
-            'loginModal',
-            'emailLoginModal',
-            'emailRegisterModal',
-            'profileModal'
-        ];
-        
-        const missingElements = requiredElements.filter(id => !document.getElementById(id));
-        if (missingElements.length > 0) {
-            console.warn('Missing elements:', missingElements);
-        } else {
-            console.log('All required elements found');
+    loadLucideIcons() {
+        if (window.lucide) {
+            lucide.createIcons();
         }
-    }
-
-    // localStorage에서 데이터 로드
-    loadDataFromStorage() {
-        try {
-            this.user = JSON.parse(localStorage.getItem('jejuUser')) || null;
-            this.apiKey = localStorage.getItem('jejuApiKey') || '';
-            this.posts = JSON.parse(localStorage.getItem('jejuPosts')) || [];
-            this.users = JSON.parse(localStorage.getItem('jejuUsers')) || [];
-            this.comments = JSON.parse(localStorage.getItem('jejuComments')) || [];
-            this.likes = JSON.parse(localStorage.getItem('jejuLikes')) || [];
-        } catch (error) {
-            console.error('데이터 로드 실패:', error);
-        }
-    }
-
-    // localStorage에 데이터 저장
-    saveDataToStorage() {
-        try {
-            localStorage.setItem('jejuUser', JSON.stringify(this.user));
-            localStorage.setItem('jejuApiKey', this.apiKey);
-            localStorage.setItem('jejuPosts', JSON.stringify(this.posts));
-            localStorage.setItem('jejuUsers', JSON.stringify(this.users));
-            localStorage.setItem('jejuComments', JSON.stringify(this.comments));
-            localStorage.setItem('jejuLikes', JSON.stringify(this.likes));
-        } catch (error) {
-            console.error('데이터 저장 실패:', error);
-        }
-    }
-
-    // API 호출 헬퍼 메서드
-    async apiCall(endpoint, options = {}) {
-        const url = `${this.apiBaseUrl}${endpoint}`;
-        const headers = {
-            'Content-Type': 'application/json',
-            ...options.headers
-        };
-
-        // 사용자 ID 헤더 추가 (서버 인증용)
-        if (this.user && this.user.id) {
-            headers['user-id'] = this.user.id;
-        }
-
-        if (this.apiKey) {
-            headers['Authorization'] = `Bearer ${this.apiKey}`;
-        }
-
-        try {
-            const response = await fetch(url, {
-                ...options,
-                headers
-            });
-
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('API 호출 실패:', error);
-            throw error;
-        }
-    }
-
-    // API에서 데이터 로드
-    async loadDataFromAPI() {
-        try {
-            // 게시글 로드
-            const postsResponse = await this.apiCall('/api/posts');
-            this.posts = postsResponse.posts || [];
-
-            // 사용자 로드
-            const usersResponse = await this.apiCall('/api/users');
-            this.users = usersResponse.users || [];
-
-            // 댓글 로드
-            const commentsResponse = await this.apiCall('/api/comments');
-            this.comments = commentsResponse.comments || [];
-
-            // 좋아요 로드
-            const likesResponse = await this.apiCall('/api/likes');
-            this.likes = likesResponse.likes || [];
-
-            console.log('API에서 데이터 로드 완료');
-        } catch (error) {
-            console.error('API 데이터 로드 실패:', error);
-            throw error;
-        }
-    }
-
-    // 샘플 데이터 생성
-    createSampleData() {
-        // 기본 관리자 사용자
-        const adminUser = {
-            id: 1,
-            email: 'admin@jeju.sns',
-            password: 'admin123',
-            displayName: 'JeJu 관리자',
-            username: '@jejuadmin',
-            apiKey: 'jeju_admin_2024',
-            isAdmin: true,
-            createdAt: new Date().toISOString(),
-            lastLogin: new Date().toISOString()
-        };
-
-        // 샘플 게시글
-        const samplePosts = [
-            {
-                id: 1,
-                author: '제주시민',
-                username: '@jejucitizen',
-                avatar: '👤',
-                content: '제주시청에서 청년 창업 지원금 신청 받고 있어요! 최대 500만원까지 지원합니다.',
-                category: 'policy',
-                timestamp: '2시간 전',
-                likes: 24,
-                comments: 8,
-                retweets: 12,
-                hasLink: true,
-                image: null,
-                userId: 1
-            },
-            {
-                id: 2,
-                author: '제주부동산',
-                username: '@jejurealty',
-                avatar: '🏠',
-                content: '서귀포시 중문동 투룸 전세 매물 나왔습니다. 보증금 8천만원, 바다 전망 좋은 곳이에요.',
-                category: 'realestate',
-                timestamp: '4시간 전',
-                likes: 15,
-                comments: 23,
-                retweets: 6,
-                hasLink: false,
-                image: null,
-                userId: 2
-            },
-            {
-                id: 3,
-                author: '제주여행사',
-                username: '@jejutour',
-                avatar: '✈️',
-                content: '이번 주말 한라산 등반 가이드 구합니다. 경력 3년 이상, 안전교육 이수자 우대. 일당 15만원입니다.',
-                category: 'jobs',
-                timestamp: '6시간 전',
-                likes: 31,
-                comments: 17,
-                retweets: 9,
-                hasLink: false,
-                image: null,
-                userId: 3
-            }
-        ];
-
-        this.users = [adminUser];
-        this.posts = samplePosts;
-        this.saveDataToStorage();
     }
 
     setupEventListeners() {
-        // 로그인 모달 닫기
+        // 로그인 버튼
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                this.showLoginModal();
+            });
+        }
+
+        // 로그아웃 버튼
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.handleLogout();
+            });
+        }
+
+        // API 버튼
+        const apiBtn = document.getElementById('apiBtn');
+        if (apiBtn) {
+            apiBtn.addEventListener('click', () => {
+                this.showApiModal();
+            });
+        }
+
+        // 모달 닫기 버튼들
         const closeLoginModal = document.getElementById('closeLoginModal');
         if (closeLoginModal) {
             closeLoginModal.addEventListener('click', () => {
@@ -237,78 +67,68 @@ class JejuSNS {
             });
         }
 
-        // 로그인 옵션들
-        const emailLogin = document.getElementById('emailLogin');
-        const googleLogin = document.getElementById('googleLogin');
-        const naverLogin = document.getElementById('naverLogin');
-        const kakaoLogin = document.getElementById('kakaoLogin');
-
-        if (emailLogin) emailLogin.addEventListener('click', () => this.handleLogin('email'));
-        if (googleLogin) googleLogin.addEventListener('click', () => this.handleLogin('google'));
-        if (naverLogin) naverLogin.addEventListener('click', () => this.handleLogin('naver'));
-        if (kakaoLogin) kakaoLogin.addEventListener('click', () => this.handleLogin('kakao'));
-
-        // API 모달 관련
         const closeApiModal = document.getElementById('closeApiModal');
-        const generateApiKey = document.getElementById('generateApiKey');
-        
         if (closeApiModal) {
             closeApiModal.addEventListener('click', () => {
                 this.hideApiModal();
             });
         }
 
+        // 로그인 옵션들
+        const emailLogin = document.querySelector('.email-login');
+        if (emailLogin) {
+            emailLogin.addEventListener('click', () => {
+                this.handleLogin('email');
+            });
+        }
+
+        const googleLogin = document.querySelector('.google-login');
+        if (googleLogin) {
+            googleLogin.addEventListener('click', () => {
+                this.handleLogin('google');
+            });
+        }
+
+        const naverLogin = document.querySelector('.naver-login');
+        if (naverLogin) {
+            naverLogin.addEventListener('click', () => {
+                this.handleLogin('naver');
+            });
+        }
+
+        const kakaoLogin = document.querySelector('.kakao-login');
+        if (kakaoLogin) {
+            kakaoLogin.addEventListener('click', () => {
+                this.handleLogin('kakao');
+            });
+        }
+
+        // API 키 생성
+        const generateApiKey = document.getElementById('generateApiKey');
         if (generateApiKey) {
             generateApiKey.addEventListener('click', () => {
                 this.generateApiKey();
             });
         }
 
-        // API 키 입력 반영
-        const apiKeyInput = document.getElementById('apiKeyInput');
-        if (apiKeyInput) {
-            apiKeyInput.addEventListener('input', (e) => {
-                this.apiKey = e.target.value;
-                localStorage.setItem('jejuApiKey', this.apiKey);
-            });
-        }
-
-        // 카테고리 버튼들
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const cat = e.target.closest('.category-btn').dataset.category;
-                if (cat === 'all') {
-                    this.selectedCategories = new Set(['all']);
-                } else {
-                    if (this.selectedCategories.has('all')) this.selectedCategories.delete('all');
-                    if (this.selectedCategories.has(cat)) {
-                        this.selectedCategories.delete(cat);
-                        if (this.selectedCategories.size === 0) this.selectedCategories.add('all');
-                    } else {
-                        this.selectedCategories.add(cat);
-                    }
-                }
-                this.updateCategoryButtons();
-                this.renderPosts();
-            });
-        });
-
         // 검색
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
-                this.searchQuery = e.target.value;
-                this.renderPosts();
+                this.handleSearch(e.target.value);
             });
         }
 
-        // 게시글 작성
-        const submitPost = document.getElementById('submitPost');
-        if (submitPost) {
-            submitPost.addEventListener('click', () => {
-                this.submitPost();
-            });
-        }
+        // 스토리 아이템들 (카테고리)
+        const storyItems = document.querySelectorAll('.story-item');
+        storyItems.forEach((item, index) => {
+            if (index > 0) { // 첫 번째는 "새 글" 버튼이므로 제외
+                item.addEventListener('click', () => {
+                    const category = this.categories[index - 1].id;
+                    this.selectCategory(category);
+                });
+            }
+        });
 
         // 이미지 업로드
         const imageUpload = document.getElementById('imageUpload');
@@ -326,413 +146,318 @@ class JejuSNS {
             });
         }
 
-        // 모달 외부 클릭 시 닫기
-        const loginModal = document.getElementById('loginModal');
-        const apiModal = document.getElementById('apiModal');
-        const profileModal = document.getElementById('profileModal');
-
-        if (loginModal) {
-            loginModal.addEventListener('click', (e) => {
-                if (e.target.id === 'loginModal') {
-                    this.hideLoginModal();
-                }
+        // 글쓰기 영역
+        const postContent = document.getElementById('postContent');
+        const submitPost = document.getElementById('submitPost');
+        
+        if (postContent) {
+            postContent.addEventListener('input', (e) => {
+                this.adjustTextareaHeight(e.target);
+                this.updatePostButton(e.target.value);
             });
-        }
-
-        if (apiModal) {
-            apiModal.addEventListener('click', (e) => {
-                if (e.target.id === 'apiModal') {
-                    this.hideApiModal();
-                }
-            });
-        }
-
-        if (profileModal) {
-            profileModal.addEventListener('click', (e) => {
-                if (e.target.id === 'profileModal') {
-                    this.hideProfileModal();
-                }
-            });
-        }
-
-        // 이메일 로그인 폼 제출
-        const emailLoginForm = document.getElementById('emailLoginForm');
-        if (emailLoginForm) {
-            emailLoginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                await this.processEmailLogin();
-            });
-        }
-
-        // 이메일 회원가입 폼 제출
-        const emailRegisterForm = document.getElementById('emailRegisterForm');
-        if (emailRegisterForm) {
-            emailRegisterForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                await this.processEmailRegister();
-            });
-        }
-
-        // 프로필 모달 버튼들
-        const saveProfileBtn = document.getElementById('saveProfile');
-        const cancelProfileBtn = document.getElementById('cancelProfile');
-        const closeProfileModal = document.getElementById('closeProfileModal');
-
-        if (saveProfileBtn) {
-            saveProfileBtn.addEventListener('click', () => {
-                this.saveProfile();
-            });
-        }
-
-        if (cancelProfileBtn) {
-            cancelProfileBtn.addEventListener('click', () => {
-                this.hideProfileModal();
-            });
-        }
-
-        if (closeProfileModal) {
-            closeProfileModal.addEventListener('click', () => {
-                this.hideProfileModal();
-            });
-        }
-    }
-
-    showLoginModal() {
-        const modal = document.getElementById('loginModal');
-        if (modal) modal.style.display = 'flex';
-    }
-
-    hideLoginModal() {
-        const modal = document.getElementById('loginModal');
-        if (modal) modal.style.display = 'none';
-    }
-
-    showApiModal() {
-        const modal = document.getElementById('apiModal');
-        const apiKeyInput = document.getElementById('apiKeyInput');
-        if (apiKeyInput) {
-            apiKeyInput.value = this.apiKey;
-        }
-        if (modal) modal.style.display = 'flex';
-    }
-
-    hideApiModal() {
-        const modal = document.getElementById('apiModal');
-        if (modal) modal.style.display = 'none';
-    }
-
-    showProfileModal() {
-        const modal = document.getElementById('profileModal');
-        if (this.user && modal) {
-            const displayName = document.getElementById('profileDisplayName');
-            const username = document.getElementById('profileUsername');
-            const email = document.getElementById('profileEmail');
             
-            if (displayName) displayName.value = this.user.displayName || '';
-            if (username) username.value = this.user.username || '';
-            if (email) email.value = this.user.email || '';
-        }
-        if (modal) modal.style.display = 'flex';
-    }
-
-    hideProfileModal() {
-        const modal = document.getElementById('profileModal');
-        if (modal) modal.style.display = 'none';
-    }
-
-    async saveProfile() {
-        const displayNameInput = document.getElementById('profileDisplayName');
-        const usernameInput = document.getElementById('profileUsername');
-        const emailInput = document.getElementById('profileEmail');
-        
-        if (!displayNameInput || !usernameInput || !emailInput) {
-            console.error('프로필 요소를 찾을 수 없습니다.');
-            return;
-        }
-        
-        const displayName = displayNameInput.value.trim();
-        const username = usernameInput.value.trim();
-        const email = emailInput.value.trim();
-
-        if (!displayName || !username || !email) {
-            this.showNotification('모든 필드를 입력해주세요.', 'error');
-            return;
+            // Enter 키로 포스트 (Shift+Enter는 줄바꿈)
+            postContent.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (!submitPost.disabled) {
+                        this.submitPost();
+                    }
+                }
+            });
         }
 
-        if (this.user) {
-            this.user.displayName = displayName;
-            this.user.username = username;
-            this.user.email = email;
-            this.saveDataToStorage();
-            this.updateUserInterface();
-            this.hideProfileModal();
-            this.showNotification('프로필이 업데이트되었습니다.');
+        if (submitPost) {
+            submitPost.addEventListener('click', () => {
+                this.submitPost();
+            });
         }
-    }
 
-    async handleLogin(provider) {
-        if (provider === 'email') {
-            this.showEmailLoginModal();
-        } else {
-            this.showNotification(`${provider} 로그인은 준비 중입니다.`, 'info');
+        // 외부 클릭 시 모달 닫기
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                this.hideLoginModal();
+                this.hideApiModal();
+            }
+        });
+
+        // 네비게이션 아이템들
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach((item, index) => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleNavigation(index);
+            });
+        });
+
+        // 카테고리 선택 드롭다운
+        const postCategory = document.getElementById('postCategory');
+        if (postCategory) {
+            postCategory.addEventListener('change', (e) => {
+                this.selectedPostCategory = e.target.value;
+            });
         }
     }
 
-    showEmailLoginModal() {
-        const modal = document.getElementById('emailLoginModal');
-        const form = document.getElementById('emailLoginForm');
-        const error = document.getElementById('emailLoginError');
+    // 네비게이션 처리
+    handleNavigation(index) {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(nav => nav.classList.remove('active'));
+        navItems[index].classList.add('active');
+
+        const views = ['home', 'search', 'region', 'likes', 'profile'];
+        this.currentView = views[index];
         
-        if (modal) modal.style.display = 'flex';
-        if (form) form.reset();
-        if (error) error.textContent = '';
+        // 뷰에 따른 UI 업데이트
+        this.updateViewForNavigation();
     }
 
-    hideEmailLoginModal() {
-        const modal = document.getElementById('emailLoginModal');
-        if (modal) modal.style.display = 'none';
+    // 네비게이션에 따른 뷰 업데이트
+    updateViewForNavigation() {
+        const searchInput = document.getElementById('searchInput');
+        const postForm = document.getElementById('postForm');
+        
+        switch (this.currentView) {
+            case 'home':
+                // 홈 뷰: 모든 기능 활성화
+                if (searchInput) searchInput.placeholder = "제주 정보 검색...";
+                if (postForm) postForm.style.display = 'block';
+                this.selectedCategories.clear();
+                this.selectedCategories.add('all');
+                break;
+                
+            case 'search':
+                // 검색 뷰: 검색에 집중
+                if (searchInput) {
+                    searchInput.placeholder = "검색어를 입력하세요...";
+                    searchInput.focus();
+                }
+                if (postForm) postForm.style.display = 'none';
+                break;
+                
+            case 'region':
+                // 지역 뷰: 지역 관련 카테고리만
+                if (searchInput) searchInput.placeholder = "지역 정보 검색...";
+                if (postForm) postForm.style.display = 'block';
+                this.selectedCategories.clear();
+                this.selectedCategories.add('events');
+                this.selectedCategories.add('policy');
+                break;
+                
+            case 'likes':
+                // 좋아요 뷰: 좋아요한 게시글만
+                if (searchInput) searchInput.placeholder = "좋아요한 게시글 검색...";
+                if (postForm) postForm.style.display = 'none';
+                this.filterLikedPosts();
+                break;
+                
+            case 'profile':
+                // 프로필 뷰: 내 게시글만
+                if (searchInput) searchInput.placeholder = "내 게시글 검색...";
+                if (postForm) postForm.style.display = 'block';
+                this.filterMyPosts();
+                break;
+        }
+        
+        this.renderPosts();
     }
 
-    async processEmailLogin() {
-        const emailInput = document.getElementById('loginEmail');
-        const passwordInput = document.getElementById('loginPassword');
-        const errorElement = document.getElementById('emailLoginError');
-        
-        if (!emailInput || !passwordInput || !errorElement) {
-            console.error('이메일 로그인 요소를 찾을 수 없습니다.');
+    // 좋아요한 게시글 필터링
+    filterLikedPosts() {
+        if (!this.user) {
+            this.showNotification('로그인이 필요합니다.', 'warning');
             return;
         }
         
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-
-        if (!email || !password) {
-            errorElement.textContent = '이메일과 비밀번호를 입력해주세요.';
-            return;
-        }
-
-        // 사용자 찾기
-        const user = this.users.find(u => u.email === email && u.password === password);
-        if (!user) {
-            errorElement.textContent = '이메일 또는 비밀번호가 올바르지 않습니다.';
-            return;
-        }
-
-        // 로그인 성공
-        this.user = user;
-        user.lastLogin = new Date().toISOString();
-        this.saveDataToStorage();
+        const likedPosts = this.posts.filter(post => 
+            post.likedBy && post.likedBy.includes(this.user.id)
+        );
         
-        this.hideEmailLoginModal();
-        this.updateUserInterface();
-        this.showNotification('로그인되었습니다.');
+        this.renderFilteredPosts(likedPosts);
     }
 
-    showEmailRegisterModal() {
-        const modal = document.getElementById('emailRegisterModal');
-        const form = document.getElementById('emailRegisterForm');
-        const error = document.getElementById('emailRegisterError');
+    // 내 게시글 필터링
+    filterMyPosts() {
+        if (!this.user) {
+            this.showNotification('로그인이 필요합니다.', 'warning');
+            return;
+        }
         
-        if (modal) modal.style.display = 'flex';
-        if (form) form.reset();
-        if (error) error.textContent = '';
+        const myPosts = this.posts.filter(post => 
+            post.userId === this.user.id
+        );
+        
+        this.renderFilteredPosts(myPosts);
     }
 
-    hideEmailRegisterModal() {
-        const modal = document.getElementById('emailRegisterModal');
-        if (modal) modal.style.display = 'none';
+    // 카테고리 선택
+    selectCategory(category) {
+        this.selectedCategories.clear();
+        this.selectedCategories.add(category);
+        this.renderPosts();
+        
+        // 스토리 아이템 활성화 상태 업데이트
+        const storyItems = document.querySelectorAll('.story-item');
+        storyItems.forEach((item, index) => {
+            if (index > 0) {
+                const itemCategory = this.categories[index - 1].id;
+                if (itemCategory === category) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            }
+        });
+        
+        this.showNotification(`${this.getCategoryName(category)} 카테고리를 선택했습니다.`);
     }
 
-    async processEmailRegister() {
-        const nameInput = document.getElementById('registerName');
-        const emailInput = document.getElementById('registerEmail');
-        const passwordInput = document.getElementById('registerPassword');
-        const errorElement = document.getElementById('emailRegisterError');
-        
-        if (!nameInput || !emailInput || !passwordInput || !errorElement) {
-            console.error('회원가입 요소를 찾을 수 없습니다.');
+    // 카테고리 이름 가져오기
+    getCategoryName(categoryId) {
+        const category = this.categories.find(cat => cat.id === categoryId);
+        return category ? category.name : '전체';
+    }
+
+    // 검색 처리
+    handleSearch(query) {
+        if (query.trim() === '') {
+            this.renderPosts();
             return;
         }
         
-        const name = nameInput.value.trim();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
+        const filteredPosts = this.posts.filter(post => 
+            post.content.toLowerCase().includes(query.toLowerCase()) ||
+            post.category.toLowerCase().includes(query.toLowerCase()) ||
+            (post.user && post.user.name && post.user.name.toLowerCase().includes(query.toLowerCase()))
+        );
+        
+        this.renderFilteredPosts(filteredPosts);
+    }
 
-        if (!name || !email || !password) {
-            errorElement.textContent = '이름, 이메일, 비밀번호를 모두 입력해주세요.';
+    // 필터링된 게시글 렌더링
+    renderFilteredPosts(posts) {
+        const container = document.getElementById('postsContainer');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        if (posts.length === 0) {
+            container.innerHTML = '<div class="no-posts">검색 결과가 없습니다.</div>';
             return;
         }
+        
+        posts.forEach(post => {
+            const postElement = this.renderPost(post);
+            container.appendChild(postElement);
+        });
+    }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            errorElement.textContent = '올바른 이메일 형식을 입력해주세요.';
-            return;
+    // 이미지 업로드 처리
+    handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.selectedImage = e.target.result;
+                this.showImagePreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
+    }
 
-        if (password.length < 6) {
-            errorElement.textContent = '비밀번호는 6자 이상이어야 합니다.';
-            return;
+    // 이미지 미리보기 표시
+    showImagePreview(imageSrc) {
+        const preview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        
+        if (preview && previewImg) {
+            previewImg.src = imageSrc;
+            preview.classList.remove('hidden');
         }
+    }
 
-        if (this.users.find(u => u.email === email)) {
-            errorElement.textContent = '이미 가입된 이메일입니다.';
-            return;
+    // 이미지 제거
+    removeImage() {
+        this.selectedImage = null;
+        const preview = document.getElementById('imagePreview');
+        const imageUpload = document.getElementById('imageUpload');
+        
+        if (preview) {
+            preview.classList.add('hidden');
         }
+        
+        if (imageUpload) {
+            imageUpload.value = '';
+        }
+    }
 
-        // 새 사용자 생성
-        const newUser = {
+    // 텍스트 영역 높이 자동 조정
+    adjustTextareaHeight(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+
+    // 게시하기 버튼 상태 업데이트
+    updatePostButton(content) {
+        const submitPost = document.getElementById('submitPost');
+        if (submitPost) {
+            const hasContent = content.trim().length > 0;
+            submitPost.disabled = !hasContent;
+        }
+    }
+
+    // 로그인 처리
+    handleLogin(provider) {
+        const userData = {
             id: Date.now(),
-            email,
-            password,
-            displayName: name,
-            username: `@${name}`,
-            apiKey: `jeju_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            isAdmin: false,
-            createdAt: new Date().toISOString(),
-            lastLogin: new Date().toISOString()
+            displayName: '제주도민',
+            username: '@jejuuser',
+            avatar: '👤',
+            email: 'user@jeju.com',
+            provider: provider
         };
 
-        this.users.push(newUser);
-        this.user = newUser;
-        this.saveDataToStorage();
-
-        this.hideEmailRegisterModal();
+        this.user = userData;
+        localStorage.setItem('jejuUser', JSON.stringify(userData));
+        
+        this.hideLoginModal();
+        this.showNotification(`${provider} 로그인이 완료되었습니다.`);
         this.updateUserInterface();
-        this.showNotification('회원가입이 완료되었습니다.');
+        this.activatePostForm();
     }
 
+    // 로그아웃 처리
     handleLogout() {
         this.user = null;
         this.apiKey = '';
         localStorage.removeItem('jejuUser');
         localStorage.removeItem('jejuApiKey');
         this.updateUserInterface();
+        this.updatePostFormForGuest();
         this.showNotification('로그아웃되었습니다.');
     }
 
-    updateUserInterface() {
-        const loginBtn = document.getElementById('loginBtn');
-        const userInfo = document.getElementById('userInfo');
-        const apiBtn = document.getElementById('apiBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const postForm = document.getElementById('postForm');
-
-        if (!loginBtn || !userInfo || !logoutBtn) {
-            console.error('사용자 인터페이스 요소를 찾을 수 없습니다.');
-            return;
-        }
-
-        if (this.user) {
-            // 로그인된 상태 - 홈 화면 + 게시글 작성 기능
-            loginBtn.style.display = 'none';
-            userInfo.style.display = 'flex';
-            
-            // 게시글 작성 폼 표시 (로그인한 사용자만)
-            if (postForm) {
-                postForm.classList.remove('hidden');
-            }
-            
-            const userDisplayName = document.getElementById('userDisplayName');
-            const userAvatar = document.getElementById('userAvatar');
-            const userAvatarInForm = document.getElementById('userAvatarInForm');
-            
-            if (userDisplayName) userDisplayName.textContent = this.user.displayName;
-            if (userAvatar) userAvatar.textContent = this.user.avatar || '👤';
-            if (userAvatarInForm) userAvatarInForm.textContent = this.user.avatar || '👤';
-        } else {
-            // 로그인되지 않은 상태 - 홈 화면만 (게시글 목록 중심)
-            loginBtn.style.display = 'inline-block';
-            userInfo.style.display = 'none';
-            
-            // 게시글 작성 폼 숨김 (로그인 필요)
-            if (postForm) {
-                postForm.classList.add('hidden');
-            }
-        }
-
-        // 버튼 이벤트 연결
-        if (loginBtn) loginBtn.onclick = () => this.showLoginModal();
-        if (logoutBtn) logoutBtn.onclick = () => this.handleLogout();
-        if (apiBtn) apiBtn.onclick = () => this.showApiModal();
-    }
-
-    async generateApiKey() {
-        if (!this.user) {
-            this.showNotification('로그인이 필요합니다.', 'error');
-            return;
-        }
-
-        const newApiKey = `jeju_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        this.apiKey = newApiKey;
-        this.user.apiKey = newApiKey;
-        this.saveDataToStorage();
+    // API 키 생성
+    generateApiKey() {
+        const key = 'jeju_' + Math.random().toString(36).substr(2, 16);
+        this.apiKey = key;
+        localStorage.setItem('jejuApiKey', key);
         
         const apiKeyInput = document.getElementById('apiKeyInput');
-        if (apiKeyInput) apiKeyInput.value = newApiKey;
-        this.showNotification('새로운 API 키가 생성되었습니다.');
-    }
-
-    selectCategory(category) {
-        if (category === 'all') {
-            this.selectedCategories = new Set(['all']);
-        } else {
-            if (this.selectedCategories.has('all')) this.selectedCategories.delete('all');
-            if (this.selectedCategories.has(category)) {
-                this.selectedCategories.delete(category);
-                if (this.selectedCategories.size === 0) this.selectedCategories.add('all');
-            } else {
-                this.selectedCategories.add(category);
-            }
-        }
-        this.updateCategoryButtons();
-        this.renderPosts();
-    }
-
-    handleImageUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        // 파일 크기 체크 (10MB)
-        if (file.size > 10 * 1024 * 1024) {
-            this.showNotification('파일 크기는 10MB 이하여야 합니다.', 'error');
-            return;
-        }
-
-        // 파일 타입 체크
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-            this.showNotification('JPG, PNG, GIF, WebP 파일만 업로드 가능합니다.', 'error');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            this.selectedImage = e.target.result;
-            const imagePreview = document.getElementById('imagePreview');
-            const removeImage = document.getElementById('removeImage');
-            
-            if (imagePreview) {
-                imagePreview.style.display = 'block';
-                imagePreview.src = this.selectedImage;
-            }
-            if (removeImage) {
-                removeImage.style.display = 'inline-block';
-            }
-        };
-        reader.readAsDataURL(file);
-    }
-
-    removeImage() {
-        this.selectedImage = null;
-        const imagePreview = document.getElementById('imagePreview');
-        const removeImage = document.getElementById('removeImage');
-        const imageUpload = document.getElementById('imageUpload');
+        const apiKeyExample = document.getElementById('apiKeyExample');
         
-        if (imagePreview) imagePreview.style.display = 'none';
-        if (removeImage) removeImage.style.display = 'none';
-        if (imageUpload) imageUpload.value = '';
+        if (apiKeyInput) {
+            apiKeyInput.value = key;
+        }
+        
+        if (apiKeyExample) {
+            apiKeyExample.textContent = key;
+        }
+        
+        this.showNotification('API 키가 생성되었습니다.');
     }
 
+    // 게시글 작성
     async submitPost() {
         if (!this.user) {
             this.showNotification('로그인이 필요합니다.', 'error');
@@ -748,7 +473,7 @@ class JejuSNS {
         }
         
         const content = postContent.value.trim();
-        const category = postCategory.value;
+        const category = this.selectedPostCategory || 'news';
 
         if (!content) {
             this.showNotification('게시글 내용을 입력해주세요.', 'error');
@@ -765,54 +490,47 @@ class JejuSNS {
                 content,
                 category,
                 image: this.selectedImage || null,
-                author: this.user.displayName,
-                username: this.user.username,
-                avatar: '👤',
                 userId: this.user.id
             };
 
-            // API 호출 시도
-            try {
-                const response = await this.apiCall('/api/posts', {
-                    method: 'POST',
-                    body: JSON.stringify(postData)
-                });
+            // 서버에 게시글 전송
+            const response = await fetch('/api/posts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(postData)
+            });
 
-                if (response.success) {
-                    this.posts.unshift(response.post);
-                    this.saveDataToStorage();
-                    this.renderPosts();
-                    this.showNotification('게시글이 등록되었습니다!');
-                    
-                    // 폼 초기화
-                    postContent.value = '';
-                    postCategory.value = 'all';
-                    this.removeImage();
-                }
-            } catch (apiError) {
-                console.log('API 호출 실패, localStorage 사용:', apiError);
-                // API 실패시 localStorage 사용
+            if (response.ok) {
+                const newPost = await response.json();
+                this.createLocalPost(content, category);
+            } else {
+                // 서버 오류 시 로컬에만 저장
                 this.createLocalPost(content, category);
             }
         } catch (error) {
-            console.error('게시글 생성 실패:', error);
-            this.showNotification('게시글 등록에 실패했습니다.', 'error');
+            console.error('게시글 작성 오류:', error);
+            // 네트워크 오류 시 로컬에만 저장
+            this.createLocalPost(content, category);
         }
     }
 
+    // 로컬 게시글 생성
     createLocalPost(content, category) {
+        const hasLink = content.includes('http://') || content.includes('https://');
         const newPost = {
             id: Date.now(),
             author: this.user.displayName,
             username: this.user.username,
-            avatar: '👤',
+            avatar: this.user.avatar,
             content,
             category,
             timestamp: '방금 전',
             likes: 0,
             comments: 0,
             retweets: 0,
-            hasLink: content.includes('http://') || content.includes('https://'),
+            hasLink,
             image: this.selectedImage || null,
             userId: this.user.id
         };
@@ -825,321 +543,236 @@ class JejuSNS {
         // 폼 초기화
         const postContent = document.getElementById('postContent');
         const postCategory = document.getElementById('postCategory');
-        if (postContent) postContent.value = '';
-        if (postCategory) postCategory.value = 'all';
+        if (postContent) {
+            postContent.value = '';
+            postContent.style.height = 'auto';
+        }
+        if (postCategory) {
+            postCategory.value = 'news';
+        }
+        
+        this.selectedImage = null;
         this.removeImage();
+        this.updatePostButton('');
     }
 
-    handleLinkClick(content) {
-        const urlMatch = content.match(/https?:\/\/[^\s]+/);
-        if (urlMatch) {
-            window.open(urlMatch[0], '_blank');
-        }
-    }
+    // 게시글 렌더링
+    renderPosts() {
+        const container = document.getElementById('postsContainer');
+        if (!container) return;
 
-    updateCategoryButtons() {
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            const category = btn.dataset.category;
-            if (this.selectedCategories.has(category)) {
-                btn.classList.add('active');
-                btn.classList.remove('hover:bg-gray-100');
-                btn.classList.add('bg-orange-100', 'text-orange-600');
-            } else {
-                btn.classList.remove('active');
-                btn.classList.remove('bg-orange-100', 'text-orange-600');
-                btn.classList.add('hover:bg-gray-100');
-            }
-        });
-    }
-
-    async renderPosts() {
-        const postsContainer = document.getElementById('postsContainer');
-        const searchInput = document.getElementById('searchInput');
+        const filteredPosts = this.getFilteredPosts();
         
-        if (!postsContainer) {
-            console.error('postsContainer 요소를 찾을 수 없습니다.');
-            return;
-        }
-        
-        const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
-
-        // 필터링된 게시글
-        let filteredPosts = this.posts.filter(post => {
-            const matchesCategory = this.selectedCategories.has('all') || this.selectedCategories.has(post.category);
-            const matchesSearch = !searchQuery || 
-                post.content.toLowerCase().includes(searchQuery) ||
-                post.author.toLowerCase().includes(searchQuery);
-            return matchesCategory && matchesSearch;
-        });
-
-        // 게시글이 없을 때
         if (filteredPosts.length === 0) {
-            postsContainer.innerHTML = `
-                <div class="no-posts">
-                    <p>게시글이 없습니다.</p>
-                    ${!this.user ? '<p>로그인하여 첫 게시글을 작성해보세요!</p>' : ''}
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📷</div>
+                    <h3 class="empty-title">아직 게시글이 없습니다</h3>
+                    <p class="empty-subtitle">첫 번째 JeJu 정보를 공유해보세요!</p>
                 </div>
             `;
             return;
         }
 
-        // 게시글 렌더링
-        try {
-            postsContainer.innerHTML = filteredPosts.map(post => this.renderPost(post)).join('');
-        } catch (error) {
-            console.error('게시글 렌더링 중 오류 발생:', error);
-            postsContainer.innerHTML = '<div class="no-posts"><p>게시글을 불러오는 중 오류가 발생했습니다.</p></div>';
-        }
+        const postsHTML = filteredPosts.map(post => this.renderPost(post)).join('');
+        container.innerHTML = postsHTML;
+        this.loadLucideIcons();
     }
 
+    // 게시글 필터링
+    getFilteredPosts() {
+        const selectedCategory = Array.from(this.selectedCategories)[0];
+        const searchQuery = document.getElementById('searchInput')?.value || '';
+
+        return this.posts.filter(post => {
+            const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
+            const matchesSearch = !searchQuery || 
+                post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                post.author.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesCategory && matchesSearch;
+        });
+    }
+
+    // 개별 게시글 렌더링 (인스타그램 스타일)
     renderPost(post) {
-        const isLiked = this.likes.some(like => like.postId === post.id && like.userId === (this.user?.id || 0));
-        const postComments = this.comments.filter(comment => comment.postId === post.id);
+        const category = this.categories.find(cat => cat.id === post.category);
+        const isLiked = post.likedBy && post.likedBy.includes(this.user?.id);
+        const commentCount = post.comments ? post.comments.length : 0;
         
         return `
-            <div class="bg-white border-b border-gray-200 p-3 hover:bg-gray-50 transition-colors" data-post-id="${post.id}">
-                <div class="flex space-x-2">
-                    <div class="text-lg">${post.avatar}</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center space-x-1 mb-1">
-                            <span class="text-sm font-bold text-gray-900">${post.author}</span>
-                            <span class="text-xs text-gray-500">${post.username}</span>
-                            <span class="text-xs text-gray-500">·</span>
-                            <span class="text-xs text-gray-500">${post.timestamp}</span>
-                            <span class="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-full">
-                                ${this.categories.find(cat => cat.id === post.category)?.icon || '📝'}
-                                ${this.categories.find(cat => cat.id === post.category)?.name || post.category}
-                            </span>
-                        </div>
-                        
-                        <div class="text-sm text-gray-900 mb-2">
-                            ${post.hasLink ? 
-                                `<span class="cursor-pointer hover:text-blue-600" onclick="jejuSNS.handleLinkClick('${post.content}')">${this.formatContent(post.content)}</span>` : 
-                                this.formatContent(post.content)
-                            }
-                        </div>
-
-                        ${post.image ? `
-                            <div class="mb-2">
-                                <img src="${post.image}" alt="게시글 이미지" class="max-w-full h-auto rounded-lg border max-h-48">
-                            </div>
-                        ` : ''}
-
-                        <div class="flex items-center space-x-6 text-gray-500 text-sm">
-                            <button class="flex items-center space-x-1 hover:text-blue-600 transition-colors" onclick="jejuSNS.toggleComments(${post.id})">
-                                <i data-lucide="message-circle" class="w-4 h-4"></i>
-                                <span class="text-xs">${postComments.length}</span>
-                            </button>
-                            <button class="flex items-center space-x-1 hover:text-green-600 transition-colors">
-                                <i data-lucide="repeat-2" class="w-4 h-4"></i>
-                                <span class="text-xs">${post.retweets}</span>
-                            </button>
-                            <button class="flex items-center space-x-1 hover:text-red-600 transition-colors ${isLiked ? 'text-red-600' : ''}" onclick="jejuSNS.toggleLike(${post.id}, this)">
-                                <i data-lucide="heart" class="w-4 h-4 ${isLiked ? 'fill-current' : ''}"></i>
-                                <span class="text-xs">${post.likes}</span>
-                            </button>
-                            <button class="flex items-center space-x-1 hover:text-blue-600 transition-colors">
-                                <i data-lucide="share" class="w-4 h-4"></i>
-                            </button>
-                            ${this.user && (this.user.id === post.userId || this.user.isAdmin) ? 
-                                `<button class="flex items-center space-x-1 hover:text-red-600 transition-colors" onclick="jejuSNS.deletePost(${post.id})">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>` : ''
-                            }
-                        </div>
+            <div class="post-card">
+                <div class="post-header">
+                    <div class="post-user-info">
+                        <div class="post-username">${post.author}</div>
+                        <div class="post-user-handle">${post.username}</div>
                     </div>
+                    <div class="post-category">${category?.icon} ${category?.name}</div>
                 </div>
                 
-                <div class="comments-section mt-3 border-t border-gray-100 pt-3" id="comments-${post.id}" style="display: none;">
-                    <div class="comments-list space-y-2">
-                        ${postComments.map(comment => `
-                            <div class="comment bg-gray-50 rounded-lg p-2" data-comment-id="${comment.id}">
-                                <div class="flex items-center space-x-2 mb-1">
-                                    <span class="text-sm">👤</span>
-                                    <span class="text-sm font-medium">${comment.author}</span>
-                                    <span class="text-xs text-gray-500">${comment.timestamp}</span>
-                                    ${this.user && (this.user.id === comment.userId || this.user.isAdmin) ? 
-                                        `<button class="text-xs text-red-600 hover:text-red-700" onclick="jejuSNS.deleteComment(${post.id}, ${comment.id})">삭제</button>` : ''
-                                    }
-                                </div>
-                                <div class="text-sm text-gray-700">${comment.content}</div>
-                            </div>
-                        `).join('')}
+                ${post.image ? `
+                    <img src="${post.image}" alt="게시글 이미지" class="post-image">
+                ` : ''}
+                
+                <div class="post-content">
+                    <div class="post-text">
+                        ${post.hasLink ? 
+                            `<a href="#" onclick="jejuSNS.handleLinkClick('${post.content}')">${post.content}</a>` : 
+                            post.content
+                        }
                     </div>
-                    ${this.user ? `
-                        <div class="comment-form mt-3 flex space-x-2">
-                            <input type="text" placeholder="댓글을 입력하세요..." id="comment-input-${post.id}" class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
-                            <button onclick="jejuSNS.submitComment(${post.id})" class="px-3 py-1 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">댓글</button>
+                    
+                    <div class="post-actions">
+                        <div class="action-row">
+                            <div class="left-actions">
+                                <button class="action-button ${isLiked ? 'liked' : ''}" onclick="jejuSNS.handleLike(${post.id})">
+                                    <i data-lucide="${isLiked ? 'heart' : 'heart'}" class="w-6 h-6"></i>
+                                </button>
+                                <button class="action-button" onclick="jejuSNS.handleComment(${post.id})">
+                                    <i data-lucide="message-circle" class="w-6 h-6"></i>
+                                </button>
+                                <button class="action-button" onclick="jejuSNS.handleShare(${post.id})">
+                                    <i data-lucide="send" class="w-6 h-6"></i>
+                                </button>
+                                ${this.user && (this.user.id === post.userId || this.user.isAdmin) ? `
+                                    <button class="action-button" onclick="jejuSNS.deletePost(${post.id})">
+                                        <i data-lucide="trash-2" class="w-6 h-6"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
                         </div>
-                    ` : ''}
+                        
+                        <div class="post-stats">
+                            좋아요 ${post.likes}개
+                            ${commentCount > 0 ? ` • 댓글 ${commentCount}개` : ''}
+                        </div>
+                        <div class="post-timestamp">${post.timestamp}</div>
+                        
+                        ${post.comments && post.comments.length > 0 ? `
+                            <div class="post-comments">
+                                ${post.comments.slice(0, 2).map(comment => `
+                                    <div class="comment">
+                                        <span class="comment-author">${comment.author}</span>
+                                        <span class="comment-content">${comment.content}</span>
+                                    </div>
+                                `).join('')}
+                                ${post.comments.length > 2 ? `
+                                    <div class="comment-more">댓글 ${post.comments.length - 2}개 더 보기</div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
             </div>
         `;
     }
 
-    formatContent(content) {
-        // 링크를 클릭 가능하게 만들기
-        return content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" onclick="jejuSNS.handleLinkClick(\'$1\')">$1</a>');
-    }
-
-    async toggleLike(postId, btn) {
+    // 좋아요 처리
+    handleLike(postId) {
         if (!this.user) {
             this.showNotification('로그인이 필요합니다.', 'error');
             return;
         }
 
-        const existingLike = this.likes.find(like => like.postId === postId && like.userId === this.user.id);
         const post = this.posts.find(p => p.id === postId);
+        if (!post) return;
 
-        try {
-            if (existingLike) {
-                // 좋아요 취소 - API 호출 시도
-                try {
-                    await this.apiCall(`/api/likes/${existingLike.id}`, {
-                        method: 'DELETE'
-                    });
-                } catch (apiError) {
-                    console.log('API 호출 실패, localStorage 사용:', apiError);
-                }
-                
-                // localStorage 업데이트
-                this.likes = this.likes.filter(like => like.id !== existingLike.id);
-                post.likes--;
-                btn.classList.remove('liked');
-                btn.querySelector('.icon').textContent = '🤍';
-            } else {
-                // 좋아요 추가 - API 호출 시도
-                const likeData = {
-                    postId,
-                    userId: this.user.id
-                };
-                
-                try {
-                    const response = await this.apiCall('/api/likes', {
-                        method: 'POST',
-                        body: JSON.stringify(likeData)
-                    });
-                    
-                    if (response.success) {
-                        this.likes.push(response.like);
-                    }
-                } catch (apiError) {
-                    console.log('API 호출 실패, localStorage 사용:', apiError);
-                    // localStorage에 추가
-                    const newLike = {
-                        id: Date.now(),
-                        postId,
-                        userId: this.user.id,
-                        timestamp: new Date().toISOString()
-                    };
-                    this.likes.push(newLike);
-                }
-                
-                post.likes++;
-                btn.classList.add('liked');
-                btn.querySelector('.icon').textContent = '❤️';
-            }
-
-            btn.querySelector('.count').textContent = post.likes;
-            this.saveDataToStorage();
-        } catch (error) {
-            console.error('좋아요 처리 실패:', error);
-            this.showNotification('좋아요 처리에 실패했습니다.', 'error');
+        if (!post.likedBy) {
+            post.likedBy = [];
         }
-    }
 
-    toggleComments(postId) {
-        const commentsSection = document.getElementById(`comments-${postId}`);
-        if (commentsSection.style.display === 'none') {
-            commentsSection.style.display = 'block';
+        const userLiked = post.likedBy.includes(this.user.id);
+        
+        if (userLiked) {
+            post.likedBy = post.likedBy.filter(id => id !== this.user.id);
+            post.likes--;
+            this.showNotification('좋아요를 취소했습니다.');
         } else {
-            commentsSection.style.display = 'none';
+            post.likedBy.push(this.user.id);
+            post.likes++;
+            this.showNotification('좋아요를 눌렀습니다!');
         }
-    }
-
-    async submitComment(postId) {
-        if (!this.user) {
-            this.showNotification('로그인이 필요합니다.', 'error');
-            return;
-        }
-
-        const commentInput = document.getElementById(`comment-input-${postId}`);
-        const content = commentInput.value.trim();
-
-        if (!content) {
-            this.showNotification('댓글 내용을 입력해주세요.', 'error');
-            return;
-        }
-
-        try {
-            const commentData = {
-                postId,
-                userId: this.user.id,
-                author: this.user.displayName,
-                content
-            };
-
-            // API 호출 시도
-            try {
-                const response = await this.apiCall('/api/comments', {
-                    method: 'POST',
-                    body: JSON.stringify(commentData)
-                });
-
-                if (response.success) {
-                    this.comments.push(response.comment);
-                }
-            } catch (apiError) {
-                console.log('API 호출 실패, localStorage 사용:', apiError);
-                // localStorage에 추가
-                const newComment = {
-                    id: Date.now(),
-                    postId,
-                    userId: this.user.id,
-                    author: this.user.displayName,
-                    content,
-                    timestamp: '방금 전'
-                };
-                this.comments.push(newComment);
-            }
-
-            const post = this.posts.find(p => p.id === postId);
-            if (post) post.comments++;
-
-            this.saveDataToStorage();
-            this.renderPosts();
-            commentInput.value = '';
-            this.showNotification('댓글이 작성되었습니다.');
-        } catch (error) {
-            console.error('댓글 작성 실패:', error);
-            this.showNotification('댓글 작성에 실패했습니다.', 'error');
-        }
-    }
-
-    async deleteComment(postId, commentId) {
-        if (!this.user) {
-            this.showNotification('로그인이 필요합니다.', 'error');
-            return;
-        }
-
-        const comment = this.comments.find(c => c.id === commentId);
-        if (!comment) return;
-
-        if (comment.userId !== this.user.id && !this.user.isAdmin) {
-            this.showNotification('댓글을 삭제할 권한이 없습니다.', 'error');
-            return;
-        }
-
-        this.comments = this.comments.filter(c => c.id !== commentId);
-        const post = this.posts.find(p => p.id === postId);
-        if (post) post.comments--;
 
         this.saveDataToStorage();
         this.renderPosts();
-        this.showNotification('댓글이 삭제되었습니다.');
     }
 
-    async deletePost(postId) {
+    // 댓글 처리
+    handleComment(postId) {
+        if (!this.user) {
+            this.showNotification('로그인이 필요합니다.', 'error');
+            return;
+        }
+        
+        const comment = prompt('댓글을 입력하세요:');
+        if (comment && comment.trim()) {
+            const post = this.posts.find(p => p.id === postId);
+            if (post) {
+                if (!post.comments) {
+                    post.comments = [];
+                }
+                
+                post.comments.push({
+                    id: Date.now(),
+                    author: this.user.displayName,
+                    content: comment.trim(),
+                    timestamp: '방금 전',
+                    userId: this.user.id
+                });
+                
+                this.saveDataToStorage();
+                this.renderPosts();
+                this.showNotification('댓글이 작성되었습니다.');
+            }
+        }
+    }
+
+    // 공유 처리
+    handleShare(postId) {
+        const post = this.posts.find(p => p.id === postId);
+        if (post) {
+            const shareText = `🍊 제주 정보 공유\n\n${post.content}\n\n#제주 #지역정보`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: '제주 정보 공유',
+                    text: shareText,
+                    url: window.location.href
+                }).catch(() => {
+                    this.copyToClipboard(shareText);
+                });
+            } else {
+                this.copyToClipboard(shareText);
+            }
+        }
+    }
+
+    // 클립보드 복사
+    copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            this.showNotification('게시글이 클립보드에 복사되었습니다.');
+        }).catch(() => {
+            // 폴백: 텍스트 영역 생성 후 복사
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            this.showNotification('게시글이 클립보드에 복사되었습니다.');
+        });
+    }
+
+    // 링크 클릭 처리
+    handleLinkClick(content) {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const urls = content.match(urlRegex);
+        if (urls) {
+            window.open(urls[0], '_blank');
+        }
+    }
+
+    // 게시글 삭제
+    deletePost(postId) {
         if (!this.user) {
             this.showNotification('로그인이 필요합니다.', 'error');
             return;
@@ -1149,52 +782,212 @@ class JejuSNS {
         if (!post) return;
 
         if (post.userId !== this.user.id && !this.user.isAdmin) {
-            this.showNotification('게시글을 삭제할 권한이 없습니다.', 'error');
+            this.showNotification('삭제 권한이 없습니다.', 'error');
             return;
         }
 
-        this.posts = this.posts.filter(p => p.id !== postId);
-        this.comments = this.comments.filter(c => c.postId !== postId);
-        this.likes = this.likes.filter(l => l.postId !== postId);
-
-        this.saveDataToStorage();
-        this.renderPosts();
-        this.showNotification('게시글이 삭제되었습니다.');
+        if (confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+            this.posts = this.posts.filter(p => p.id !== postId);
+            this.saveDataToStorage();
+            this.renderPosts();
+            this.showNotification('게시글이 삭제되었습니다.');
+        }
     }
 
+    // 사용자 인터페이스 업데이트
+    updateUserInterface() {
+        const loginBtn = document.getElementById('loginBtn');
+        const userInfo = document.getElementById('userInfo');
+        const userAvatar = document.getElementById('userAvatar');
+        const userDisplayName = document.getElementById('userDisplayName');
+        const userUsername = document.getElementById('userUsername');
+        const userAvatarInForm = document.getElementById('userAvatarInForm');
+
+        if (!loginBtn || !userInfo) {
+            console.error('사용자 인터페이스 요소를 찾을 수 없습니다.');
+            return;
+        }
+
+        if (this.user) {
+            loginBtn.style.display = 'none';
+            userInfo.style.display = 'flex';
+            
+            if (userDisplayName) {
+                userDisplayName.textContent = this.user.displayName;
+            }
+            if (userUsername) {
+                userUsername.textContent = this.user.username;
+            }
+            if (userAvatar) {
+                userAvatar.textContent = this.user.avatar;
+            }
+            if (userAvatarInForm) {
+                userAvatarInForm.textContent = this.user.avatar;
+            }
+        } else {
+            loginBtn.style.display = 'flex';
+            userInfo.style.display = 'none';
+        }
+    }
+
+    // 글쓰기 폼 활성화
+    activatePostForm() {
+        const postForm = document.getElementById('postForm');
+        const postContent = document.getElementById('postContent');
+        
+        if (postForm && postContent) {
+            postForm.classList.remove('hidden');
+            postContent.placeholder = '제주 지역 정보를 공유해보세요...';
+            postContent.disabled = false;
+        }
+    }
+
+    // 게스트용 글쓰기 폼
+    updatePostFormForGuest() {
+        const postContent = document.getElementById('postContent');
+        const submitPost = document.getElementById('submitPost');
+        
+        if (postContent) {
+            postContent.placeholder = '로그인하여 제주 지역 정보를 공유해보세요...';
+            postContent.disabled = true;
+        }
+        
+        if (submitPost) {
+            submitPost.disabled = true;
+        }
+    }
+
+    // 모달 표시/숨김
+    showLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    }
+
+    hideLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    showApiModal() {
+        const modal = document.getElementById('apiModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            if (apiKeyInput) {
+                apiKeyInput.value = this.apiKey || '';
+            }
+        }
+    }
+
+    hideApiModal() {
+        const modal = document.getElementById('apiModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    // 알림 표시
     showNotification(message, type = 'success') {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
+        const notification = document.getElementById('notification');
+        if (!notification) return;
+
         notification.textContent = message;
-        
-        document.body.appendChild(notification);
-        
+        notification.className = `notification ${type}`;
+        notification.classList.remove('hidden');
+
         setTimeout(() => {
-            notification.classList.add('show');
-        }, 100);
-        
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 300);
+            notification.classList.add('hidden');
         }, 3000);
     }
 
-    goToHome() {
-        window.location.href = '/';
+    // 데이터 저장/로드
+    saveDataToStorage() {
+        localStorage.setItem('jejuPosts', JSON.stringify(this.posts));
+    }
+
+    loadDataFromStorage() {
+        const savedUser = localStorage.getItem('jejuUser');
+        const savedPosts = localStorage.getItem('jejuPosts');
+        const savedApiKey = localStorage.getItem('jejuApiKey');
+
+        if (savedUser) {
+            this.user = JSON.parse(savedUser);
+        }
+
+        if (savedPosts) {
+            this.posts = JSON.parse(savedPosts);
+        } else {
+            // 샘플 데이터
+            this.posts = [
+                {
+                    id: 1,
+                    author: '제주시민',
+                    username: '@jejucitizen',
+                    avatar: '👤',
+                    content: '제주시청에서 청년 창업 지원금 신청 받고 있어요! 최대 500만원까지 지원합니다. 자세한 내용은 https://jeju.go.kr/startup 확인해보세요.',
+                    category: 'policy',
+                    timestamp: '2시간 전',
+                    likes: 24,
+                    comments: 8,
+                    retweets: 12,
+                    hasLink: true,
+                    image: null
+                },
+                {
+                    id: 2,
+                    author: '제주부동산',
+                    username: '@jejurealty',
+                    avatar: '🏠',
+                    content: '서귀포시 중문동 투룸 전세 매물 나왔습니다. 보증금 8천만원, 바다 전망 좋은 곳이에요. 연락주세요!',
+                    category: 'realestate',
+                    timestamp: '4시간 전',
+                    likes: 15,
+                    comments: 23,
+                    retweets: 6,
+                    hasLink: false,
+                    image: null
+                },
+                {
+                    id: 3,
+                    author: '제주여행사',
+                    username: '@jejutour',
+                    avatar: '✈️',
+                    content: '이번 주말 한라산 등반 가이드 구합니다. 경력 3년 이상, 안전교육 이수자 우대. 일당 15만원입니다.',
+                    category: 'jobs',
+                    timestamp: '6시간 전',
+                    likes: 31,
+                    comments: 17,
+                    retweets: 9,
+                    hasLink: false,
+                    image: null
+                },
+                {
+                    id: 4,
+                    author: '제주문화원',
+                    username: '@jejuculture',
+                    avatar: '🎭',
+                    content: '제주 전통 해녀 문화 체험 행사가 다음 주 토요일 성산일출봉에서 열립니다. 참가비 무료, 사전 신청 필수!',
+                    category: 'events',
+                    timestamp: '8시간 전',
+                    likes: 67,
+                    comments: 34,
+                    retweets: 28,
+                    hasLink: false,
+                    image: null
+                }
+            ];
+        }
+
+        if (savedApiKey) {
+            this.apiKey = savedApiKey;
+        }
     }
 }
 
-// 앱 초기화 - DOM 로드 후 실행
-document.addEventListener('DOMContentLoaded', () => {
-    // DOM이 완전히 준비될 때까지 대기
-    const initApp = () => {
-        const jejuSNS = new JejuSNS();
-        // 전역 변수로 설정하여 모달에서 접근 가능하게 함
-        window.jejuSNS = jejuSNS;
-    };
-    
-    // 약간의 지연을 두어 DOM이 완전히 준비되도록 함
-    setTimeout(initApp, 100);
-}); 
+// 앱 초기화
+const jejuSNS = new JejuSNS(); 
