@@ -842,12 +842,12 @@ class JejuSNS {
             const category = btn.dataset.category;
             if (this.selectedCategories.has(category)) {
                 btn.classList.add('active');
-                btn.classList.remove('hover:bg-gray-100', 'border-transparent');
-                btn.classList.add('bg-orange-100', 'text-orange-600', 'border-orange-300');
+                btn.classList.remove('hover:bg-gray-100');
+                btn.classList.add('bg-orange-100', 'text-orange-600');
             } else {
                 btn.classList.remove('active');
-                btn.classList.remove('bg-orange-100', 'text-orange-600', 'border-orange-300');
-                btn.classList.add('hover:bg-gray-100', 'border-transparent');
+                btn.classList.remove('bg-orange-100', 'text-orange-600');
+                btn.classList.add('hover:bg-gray-100');
             }
         });
     }
